@@ -4,6 +4,8 @@ import ForceGraph2D, {
   LinkObject,
 } from 'react-force-graph-2d';
 import { delay, genRandomTree, makeAdjList } from '../utils';
+import * as d3Force from 'd3-force';
+
 import Button from './Button';
 
 enum RunStatus {
@@ -22,6 +24,7 @@ export interface IEdge {
   target: any;
   name?: string;
   color?: string;
+  [key: string]: any;
 }
 
 export interface INode {
@@ -29,6 +32,7 @@ export interface INode {
   val?: number;
   name?: string;
   color?: string;
+  [key: string]: any;
 }
 
 const dummyGraph: IGraphData = {
@@ -69,9 +73,7 @@ const Graph = () => {
   });
 
   const changeNodeColor = (node: INode, color: string) => {
-    const tmp = { ...graphData };
-    tmp.nodes[node.id].color = color;
-    setGraphData(tmp);
+    node.color = color;
   };
 
   const dfs = async (
@@ -98,13 +100,35 @@ const Graph = () => {
     tmp.nodes.forEach((each) => changeNodeColor(each, '#ff0000'));
   };
 
+  const run = async () => {
+    const DELAY_TIME_MS = 250;
+    const MAX = 1e9 + 7;
+    let id = 0;
+
+    const adjList = makeAdjList(graphData);
+    const order = adjList.map(() => -1);
+    const low = adjList.map(() => MAX);
+    const vis = adjList.map(() => false);
+    const stack: number[] = [];
+    setIsRunning(RunStatus.Running);
+    await delay(DELAY_TIME_MS);
+    for (let i = 0; i < adjList.length; i++) {
+      if (!vis[graphData.nodes[i].id]) {
+        await dfs(graphData.nodes[i], adjList, vis, DELAY_TIME_MS);
+      }
+    }
+    setIsRunning(RunStatus.Complete);
+    await delay(DELAY_TIME_MS);
+  };
+
   useEffect(() => {
     if (graphData.links.length === 0) {
       // setGraphData(genRandomTree(10) as IGraphData);
       setGraphData(dummyGraph);
     } else {
-      const LINK_LENGTH_CONSTANT = 100;
+      const LINK_LENGTH_CONSTANT = 30;
       const fg = fgRef.current!;
+      fg.d3Force('charge', d3Force.forceManyBody().strength(-300));
       fg.d3Force('link')!.distance(() => LINK_LENGTH_CONSTANT);
     }
   }, [graphData]);
@@ -122,18 +146,14 @@ const Graph = () => {
           maxZoom={5}
           backgroundColor='black'
           enablePanInteraction={true}
+          autoPauseRedraw
           // node attr
           enableNodeDrag={true}
-          // onNodeDragEnd={(node) => {
-          //   node.fx = node.x;
-          //   node.fy = node.y;
-          //   node.fz = node.z;
-          // }}
-          nodeRelSize={12}
+          nodeRelSize={10}
           nodeCanvasObjectMode={() => 'after'}
           nodeCanvasObject={(node, ctx, globalScale) => {
             const label = node.name;
-            const fontSize = 12 / globalScale;
+            const fontSize = 10 / globalScale;
             ctx.font = `${fontSize}px Sans-Serif`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
@@ -142,28 +162,14 @@ const Graph = () => {
           }}
           // link attr
           linkDirectionalArrowLength={5}
-          linkDirectionalArrowRelPos={0.5}
+          linkDirectionalArrowRelPos={1}
           // linkCurvature={0.1}
           // dagMode='td'
           // dagLevelDistance={50}
         />
       </div>
       <div className='w-full'>
-        <Button
-          disabled={isRunning !== RunStatus.Incomplete}
-          onClick={async () => {
-            const adjList = makeAdjList(graphData);
-            const vis = adjList.map(() => false);
-            setIsRunning(RunStatus.Running);
-            await delay(250);
-            for (let i = 0; i < adjList.length; i++) {
-              if (!vis[graphData.nodes[i].id]) {
-                await dfs(graphData.nodes[i], adjList, vis, 250);
-              }
-            }
-            setIsRunning(RunStatus.Complete);
-            await delay(250);
-          }}>
+        <Button disabled={isRunning !== RunStatus.Incomplete} onClick={run}>
           {isRunning ? 'Running' : 'Run'}
         </Button>
         <Button
