@@ -6,9 +6,10 @@ import ForceGraph2D, {
 import {
   delay,
   genRandomTree,
-  getRandomColor,
+  genRandomColor,
   makeAdjList,
   makeEdgeDict,
+  genGraphFromJSON,
 } from '../utils';
 import * as d3Force from 'd3-force';
 
@@ -20,10 +21,10 @@ enum RunStatus {
   Complete,
 }
 
-const DEFAULT_NODE_COLOR = '#ff0000';
-const DISCOVERED_NODE_COLOR = '#cc7000';
-const DEFAULT_EDGE_COLOR = '#ccc';
-const HIGHLIGHTED_EDGE_COLOR = '#00ff00';
+export const DEFAULT_NODE_COLOR = '#ff0000';
+export const DISCOVERED_NODE_COLOR = '#cc7000';
+export const DEFAULT_EDGE_COLOR = '#ccc';
+export const HIGHLIGHTED_EDGE_COLOR = '#00ff00';
 
 export interface IGraphData {
   nodes: INode[];
@@ -146,7 +147,7 @@ const Graph = () => {
     }
 
     if (low[node.id] === order[node.id]) {
-      const color = getRandomColor();
+      const color = genRandomColor();
       while (stack[stack.length - 1] != node.id) {
         const i = stack.pop();
         vis[i!] = false;
@@ -203,9 +204,10 @@ const Graph = () => {
   useEffect(() => {
     if (graphData.links.length === 0) {
       // setGraphData(genRandomTree(10) as IGraphData);
-      setGraphData(dummyGraph);
+      // setGraphData(dummyGraph);
 
       (async () => {
+        setGraphData(await genGraphFromJSON(''));
         await delay(cooldownTime);
         setCooldownTime(0);
       })();
