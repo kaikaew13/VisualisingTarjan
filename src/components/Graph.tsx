@@ -3,7 +3,7 @@ import ForceGraph2D, {
   ForceGraphMethods,
   LinkObject,
 } from 'react-force-graph-2d';
-import { delay, genRandomTree, makeAdjList } from '../utils';
+import { delay, genRandomTree, getRandomColor, makeAdjList } from '../utils';
 import * as d3Force from 'd3-force';
 
 import Button from './Button';
@@ -13,6 +13,11 @@ enum RunStatus {
   Running,
   Complete,
 }
+
+const DEFAULT_NODE_COLOR = '#ff0000';
+const DISCOVERED_NODE_COLOR = '#cc7000';
+const DEFAULT_EDGE_COLOR = '#ccc';
+const HIGHLIGHTED_EDGE_COLOR = '#00ff00';
 
 export interface IGraphData {
   nodes: INode[];
@@ -37,73 +42,129 @@ export interface INode {
 
 const dummyGraph: IGraphData = {
   nodes: [
-    { id: 0, val: 1, name: 'node 0', color: '#ff0000' },
-    { id: 1, val: 1, name: 'node 1', color: '#ff0000' },
-    { id: 2, val: 1, name: 'node 2', color: '#ff0000' },
-    { id: 3, val: 1, name: 'node 3', color: '#ff0000' },
-    { id: 4, val: 1, name: 'node 4', color: '#ff0000' },
-    { id: 5, val: 1, name: 'node 5', color: '#ff0000' },
-    { id: 6, val: 1, name: 'node 6', color: '#ff0000' },
-    { id: 7, val: 1, name: 'node 7', color: '#ff0000' },
+    { id: 0, val: 1, name: 'node 0', color: DEFAULT_NODE_COLOR },
+    { id: 1, val: 1, name: 'node 1', color: DEFAULT_NODE_COLOR },
+    { id: 2, val: 1, name: 'node 2', color: DEFAULT_NODE_COLOR },
+    { id: 3, val: 1, name: 'node 3', color: DEFAULT_NODE_COLOR },
+    { id: 4, val: 1, name: 'node 4', color: DEFAULT_NODE_COLOR },
+    { id: 5, val: 1, name: 'node 5', color: DEFAULT_NODE_COLOR },
+    { id: 6, val: 1, name: 'node 6', color: DEFAULT_NODE_COLOR },
+    { id: 7, val: 1, name: 'node 7', color: DEFAULT_NODE_COLOR },
   ],
   links: [
-    { source: 0, target: 1, color: '#ccc' },
-    { source: 1, target: 2, color: '#ccc' },
-    { source: 2, target: 0, color: '#ccc' },
-    { source: 3, target: 1, color: '#ccc' },
-    { source: 3, target: 2, color: '#ccc' },
-    { source: 3, target: 4, color: '#ccc' },
-    { source: 4, target: 3, color: '#ccc' },
-    { source: 4, target: 5, color: '#ccc' },
-    { source: 5, target: 2, color: '#ccc' },
-    { source: 5, target: 6, color: '#ccc' },
-    { source: 6, target: 5, color: '#ccc' },
-    { source: 7, target: 4, color: '#ccc' },
-    { source: 7, target: 6, color: '#ccc' },
+    { source: 0, target: 1, name: '0 -> 1', color: DEFAULT_EDGE_COLOR },
+    { source: 1, target: 2, name: '1 -> 2', color: DEFAULT_EDGE_COLOR },
+    { source: 2, target: 0, name: '2 -> 0', color: DEFAULT_EDGE_COLOR },
+    { source: 3, target: 1, name: '3 -> 1', color: DEFAULT_EDGE_COLOR },
+    { source: 3, target: 2, name: '3 -> 2', color: DEFAULT_EDGE_COLOR },
+    { source: 3, target: 4, name: '3 -> 4', color: DEFAULT_EDGE_COLOR },
+    { source: 4, target: 3, name: '4 -> 3', color: DEFAULT_EDGE_COLOR },
+    { source: 4, target: 5, name: '4 -> 5', color: DEFAULT_EDGE_COLOR },
+    { source: 5, target: 2, name: '5 -> 2', color: DEFAULT_EDGE_COLOR },
+    { source: 5, target: 6, name: '5 -> 6', color: DEFAULT_EDGE_COLOR },
+    { source: 6, target: 5, name: '6 -> 5', color: DEFAULT_EDGE_COLOR },
+    { source: 7, target: 4, name: '7 -> 4', color: DEFAULT_EDGE_COLOR },
+    { source: 7, target: 6, name: '7 -> 6', color: DEFAULT_EDGE_COLOR },
   ],
 };
 
 const Graph = () => {
   const fgRef = useRef<ForceGraphMethods<any, LinkObject<any, IEdge>>>();
 
+  const [cooldownTime, setCooldownTime] = useState(1500);
   const [isRunning, setIsRunning] = useState(RunStatus.Incomplete);
   const [graphData, setGraphData] = useState<IGraphData>({
     nodes: [],
     links: [],
   });
 
-  const changeNodeColor = (node: INode, color: string) => {
-    node.color = color;
+  const changeEdgeColor = (edge: IEdge, color: string) => {
+    const tmp = { ...graphData };
+    tmp.links.forEach((each) => {
+      if (each.name === edge.name) {
+        each.color = color;
+        return;
+      }
+    });
+
+    setGraphData(tmp);
   };
 
-  const dfs = async (
+  const changeNodeColor = (node: INode, color: string) => {
+    const tmp = { ...graphData };
+    tmp.nodes[node.id].color = color;
+    setGraphData(tmp);
+    // node.color = color;
+  };
+
+  const tarjan = async (
     node: INode,
     adjList: number[][],
+    id: number[],
+    order: number[],
+    low: number[],
     vis: boolean[],
+    stack: number[],
     ms: number
   ) => {
-    if (vis[node.id]) return;
+    order[node.id] = id[0];
+    low[node.id] = id[0]++;
     vis[node.id] = true;
-    console.log(node.id);
-    changeNodeColor(node, '#cc7000');
+    stack.push(node.id);
+    changeNodeColor(node, DISCOVERED_NODE_COLOR);
     await delay(ms);
     for (let i = 0; i < adjList[node.id].length; i++) {
-      await dfs(graphData.nodes[adjList[node.id][i]], adjList, vis, ms);
+      const j = adjList[node.id][i];
+      const e = graphData.links.find(
+        (each) => each.name === `${node.id} -> ${j}`
+      );
+
+      if (order[j] === -1) {
+        changeEdgeColor(e!, HIGHLIGHTED_EDGE_COLOR);
+        await delay(ms);
+        changeEdgeColor(e!, DEFAULT_EDGE_COLOR);
+        await delay(ms);
+        await tarjan(
+          graphData.nodes[j],
+          adjList,
+          id,
+          order,
+          low,
+          vis,
+          stack,
+          ms
+        );
+        low[node.id] = Math.min(low[node.id], low[j]);
+      } else if (vis[j]) {
+        low[node.id] = Math.min(low[node.id], low[j]);
+      }
     }
 
-    changeNodeColor(node, '#00cc70');
-    await delay(ms);
+    if (low[node.id] === order[node.id]) {
+      const color = getRandomColor();
+      while (stack[stack.length - 1] != low[node.id]) {
+        const i = stack.pop();
+        vis[i!] = false;
+        changeNodeColor(graphData.nodes[i!], color);
+        await delay(ms);
+      }
+
+      vis[stack.pop()!] = false;
+      changeNodeColor(node, color);
+      await delay(ms);
+    }
   };
 
   const resetGraph = () => {
-    const tmp = { ...graphData };
-    tmp.nodes.forEach((each) => changeNodeColor(each, '#ff0000'));
+    graphData.nodes.forEach((each) =>
+      changeNodeColor(each, DEFAULT_NODE_COLOR)
+    );
   };
 
   const run = async () => {
-    const DELAY_TIME_MS = 250;
+    const DELAY_TIME_MS = 300;
     const MAX = 1e9 + 7;
-    let id = 0;
+    const id = [0];
 
     const adjList = makeAdjList(graphData);
     const order = adjList.map(() => -1);
@@ -113,10 +174,20 @@ const Graph = () => {
     setIsRunning(RunStatus.Running);
     await delay(DELAY_TIME_MS);
     for (let i = 0; i < adjList.length; i++) {
-      if (!vis[graphData.nodes[i].id]) {
-        await dfs(graphData.nodes[i], adjList, vis, DELAY_TIME_MS);
+      if (order[graphData.nodes[i].id] === -1) {
+        await tarjan(
+          graphData.nodes[i],
+          adjList,
+          id,
+          order,
+          low,
+          vis,
+          stack,
+          DELAY_TIME_MS
+        );
       }
     }
+
     setIsRunning(RunStatus.Complete);
     await delay(DELAY_TIME_MS);
   };
@@ -125,6 +196,11 @@ const Graph = () => {
     if (graphData.links.length === 0) {
       // setGraphData(genRandomTree(10) as IGraphData);
       setGraphData(dummyGraph);
+
+      (async () => {
+        await delay(cooldownTime);
+        setCooldownTime(0);
+      })();
     } else {
       const LINK_LENGTH_CONSTANT = 30;
       const fg = fgRef.current!;
@@ -140,7 +216,7 @@ const Graph = () => {
           ref={fgRef}
           graphData={graphData}
           // cooldownTicks={100}
-          // cooldownTime={1500}
+          cooldownTime={cooldownTime}
           height={screen.height * 0.65}
           width={screen.width}
           maxZoom={5}
@@ -163,7 +239,24 @@ const Graph = () => {
           // link attr
           linkDirectionalArrowLength={5}
           linkDirectionalArrowRelPos={1}
-          // linkCurvature={0.1}
+          linkCurvature={(link) => {
+            let cnt = 0;
+            const tmp = graphData.links;
+            for (let i = 0; i < tmp.length; i++) {
+              if (
+                tmp[i].source === link.source &&
+                tmp[i].target === link.target
+              )
+                cnt++;
+              if (
+                tmp[i].source === link.target &&
+                tmp[i].target === link.source
+              )
+                cnt++;
+            }
+
+            return cnt === 2 ? 0.1 : 0;
+          }}
           // dagMode='td'
           // dagLevelDistance={50}
         />
