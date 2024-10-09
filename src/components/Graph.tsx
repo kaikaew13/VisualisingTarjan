@@ -3,7 +3,13 @@ import ForceGraph2D, {
   ForceGraphMethods,
   LinkObject,
 } from 'react-force-graph-2d';
-import { delay, genRandomTree, getRandomColor, makeAdjList } from '../utils';
+import {
+  delay,
+  genRandomTree,
+  getRandomColor,
+  makeAdjList,
+  makeEdgeDict,
+} from '../utils';
 import * as d3Force from 'd3-force';
 
 import Button from './Button';
@@ -100,6 +106,7 @@ const Graph = () => {
   const tarjan = async (
     node: INode,
     adjList: number[][],
+    edgeDict: IEdge[][],
     id: number[],
     order: number[],
     low: number[],
@@ -115,18 +122,16 @@ const Graph = () => {
     await delay(ms);
     for (let i = 0; i < adjList[node.id].length; i++) {
       const j = adjList[node.id][i];
-      const e = graphData.links.find(
-        (each) => each.name === `${node.id} -> ${j}`
-      );
 
       if (order[j] === -1) {
-        changeEdgeColor(e!, HIGHLIGHTED_EDGE_COLOR);
+        changeEdgeColor(edgeDict[node.id][j], HIGHLIGHTED_EDGE_COLOR);
         await delay(ms);
-        changeEdgeColor(e!, DEFAULT_EDGE_COLOR);
+        changeEdgeColor(edgeDict[node.id][j], DEFAULT_EDGE_COLOR);
         await delay(ms);
         await tarjan(
           graphData.nodes[j],
           adjList,
+          edgeDict,
           id,
           order,
           low,
@@ -142,7 +147,7 @@ const Graph = () => {
 
     if (low[node.id] === order[node.id]) {
       const color = getRandomColor();
-      while (stack[stack.length - 1] != low[node.id]) {
+      while (stack[stack.length - 1] != node.id) {
         const i = stack.pop();
         vis[i!] = false;
         changeNodeColor(graphData.nodes[i!], color);
@@ -163,21 +168,24 @@ const Graph = () => {
 
   const run = async () => {
     const DELAY_TIME_MS = 300;
-    const MAX = 1e9 + 7;
+    const MAX = 2e9 + 7;
     const id = [0];
 
     const adjList = makeAdjList(graphData);
+    const edgeDict = makeEdgeDict(graphData);
+
     const order = adjList.map(() => -1);
     const low = adjList.map(() => MAX);
     const vis = adjList.map(() => false);
     const stack: number[] = [];
     setIsRunning(RunStatus.Running);
     await delay(DELAY_TIME_MS);
-    for (let i = 0; i < adjList.length; i++) {
+    for (let i = adjList.length - 1; i >= 0; i--) {
       if (order[graphData.nodes[i].id] === -1) {
         await tarjan(
           graphData.nodes[i],
           adjList,
+          edgeDict,
           id,
           order,
           low,

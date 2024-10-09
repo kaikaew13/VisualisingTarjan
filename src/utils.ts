@@ -1,4 +1,4 @@
-import { IGraphData } from './components/Graph';
+import { IEdge, IGraphData } from './components/Graph';
 
 export const genRandomTree = (n = 10) => {
   return {
@@ -30,6 +30,16 @@ export const makeAdjList = (graphData: IGraphData) => {
   });
 
   return adjList;
+};
+
+export const makeEdgeDict = (graphData: IGraphData) => {
+  const edgeDict: (IEdge | null)[][] = graphData.nodes.map(() =>
+    graphData.nodes.map(() => null)
+  );
+  graphData.links.forEach((each) => {
+    edgeDict[each.source.id][each.target.id] = each;
+  });
+  return edgeDict as IEdge[][];
 };
 
 export const getRandomColor = () => {
