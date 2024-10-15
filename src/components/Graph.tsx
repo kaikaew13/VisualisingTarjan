@@ -22,9 +22,14 @@ enum RunStatus {
 }
 
 export const DEFAULT_NODE_COLOR = '#ff0000';
-export const DISCOVERED_NODE_COLOR = '#cc7000';
+export const DISCOVERED_NODE_COLOR = '#808080';
 export const DEFAULT_EDGE_COLOR = '#ccc';
 export const HIGHLIGHTED_EDGE_COLOR = '#00ff00';
+
+export interface ITransitionFrame {
+  x: INode | IEdge;
+  color: string;
+}
 
 export interface IGraphData {
   nodes: INode[];
@@ -47,34 +52,6 @@ export interface INode {
   [key: string]: any;
 }
 
-const dummyGraph: IGraphData = {
-  nodes: [
-    { id: 0, val: 1, name: 'node 0', color: DEFAULT_NODE_COLOR },
-    { id: 1, val: 1, name: 'node 1', color: DEFAULT_NODE_COLOR },
-    { id: 2, val: 1, name: 'node 2', color: DEFAULT_NODE_COLOR },
-    { id: 3, val: 1, name: 'node 3', color: DEFAULT_NODE_COLOR },
-    { id: 4, val: 1, name: 'node 4', color: DEFAULT_NODE_COLOR },
-    { id: 5, val: 1, name: 'node 5', color: DEFAULT_NODE_COLOR },
-    { id: 6, val: 1, name: 'node 6', color: DEFAULT_NODE_COLOR },
-    { id: 7, val: 1, name: 'node 7', color: DEFAULT_NODE_COLOR },
-  ],
-  links: [
-    { source: 0, target: 1, name: '0 -> 1', color: DEFAULT_EDGE_COLOR },
-    { source: 1, target: 2, name: '1 -> 2', color: DEFAULT_EDGE_COLOR },
-    { source: 2, target: 0, name: '2 -> 0', color: DEFAULT_EDGE_COLOR },
-    { source: 3, target: 1, name: '3 -> 1', color: DEFAULT_EDGE_COLOR },
-    { source: 3, target: 2, name: '3 -> 2', color: DEFAULT_EDGE_COLOR },
-    { source: 3, target: 4, name: '3 -> 4', color: DEFAULT_EDGE_COLOR },
-    { source: 4, target: 3, name: '4 -> 3', color: DEFAULT_EDGE_COLOR },
-    { source: 4, target: 5, name: '4 -> 5', color: DEFAULT_EDGE_COLOR },
-    { source: 5, target: 2, name: '5 -> 2', color: DEFAULT_EDGE_COLOR },
-    { source: 5, target: 6, name: '5 -> 6', color: DEFAULT_EDGE_COLOR },
-    { source: 6, target: 5, name: '6 -> 5', color: DEFAULT_EDGE_COLOR },
-    { source: 7, target: 4, name: '7 -> 4', color: DEFAULT_EDGE_COLOR },
-    { source: 7, target: 6, name: '7 -> 6', color: DEFAULT_EDGE_COLOR },
-  ],
-};
-
 const Graph = () => {
   const fgRef = useRef<ForceGraphMethods<any, LinkObject<any, IEdge>>>();
 
@@ -84,6 +61,9 @@ const Graph = () => {
     nodes: [],
     links: [],
   });
+  const [transitionFrames, setTransitionFrames] = useState<ITransitionFrame[]>(
+    []
+  );
 
   const changeEdgeColor = (edge: IEdge, color: string) => {
     const tmp = { ...graphData };
@@ -104,7 +84,7 @@ const Graph = () => {
     // node.color = color;
   };
 
-  const tarjan = async (
+  const tarjan = (
     node: INode,
     adjList: number[][],
     edgeDict: IEdge[][],
@@ -113,23 +93,20 @@ const Graph = () => {
     low: number[],
     vis: boolean[],
     stack: number[],
-    ms: number
+    result: ITransitionFrame[]
   ) => {
     order[node.id] = id[0];
     low[node.id] = id[0]++;
     vis[node.id] = true;
     stack.push(node.id);
-    changeNodeColor(node, DISCOVERED_NODE_COLOR);
-    await delay(ms);
+    result.push({ x: node, color: DISCOVERED_NODE_COLOR });
     for (let i = 0; i < adjList[node.id].length; i++) {
       const j = adjList[node.id][i];
 
       if (order[j] === -1) {
-        changeEdgeColor(edgeDict[node.id][j], HIGHLIGHTED_EDGE_COLOR);
-        await delay(ms);
-        changeEdgeColor(edgeDict[node.id][j], DEFAULT_EDGE_COLOR);
-        await delay(ms);
-        await tarjan(
+        result.push({ x: edgeDict[node.id][j], color: HIGHLIGHTED_EDGE_COLOR });
+        result.push({ x: edgeDict[node.id][j], color: DEFAULT_EDGE_COLOR });
+        tarjan(
           graphData.nodes[j],
           adjList,
           edgeDict,
@@ -138,7 +115,7 @@ const Graph = () => {
           low,
           vis,
           stack,
-          ms
+          result
         );
         low[node.id] = Math.min(low[node.id], low[j]);
       } else if (vis[j]) {
@@ -151,13 +128,11 @@ const Graph = () => {
       while (stack[stack.length - 1] != node.id) {
         const i = stack.pop();
         vis[i!] = false;
-        changeNodeColor(graphData.nodes[i!], color);
-        await delay(ms);
+        result.push({ x: graphData.nodes[i!], color: color });
       }
 
       vis[stack.pop()!] = false;
-      changeNodeColor(node, color);
-      await delay(ms);
+      result.push({ x: node, color: color });
     }
   };
 
@@ -167,8 +142,30 @@ const Graph = () => {
     );
   };
 
+  const stepTransition = (result: ITransitionFrame[], i: number) => {
+    if ('id' in result[i].x) {
+      changeNodeColor(result[i].x as INode, result[i].color);
+    } else {
+      changeEdgeColor(result[i].x as IEdge, result[i].color);
+    }
+
+    return i + 1;
+  };
+
+  const playTransition = async (result: ITransitionFrame[], ms: number) => {
+    for (let i = 0; i < result.length; i++) {
+      if ('id' in result[i].x) {
+        changeNodeColor(result[i].x as INode, result[i].color);
+      } else {
+        changeEdgeColor(result[i].x as IEdge, result[i].color);
+      }
+
+      await delay(ms);
+    }
+  };
+
   const run = async () => {
-    const DELAY_TIME_MS = 300;
+    const DELAY_TIME_MS = 250;
     const MAX = 2e9 + 7;
     const id = [0];
 
@@ -179,11 +176,12 @@ const Graph = () => {
     const low = adjList.map(() => MAX);
     const vis = adjList.map(() => false);
     const stack: number[] = [];
+    const result: ITransitionFrame[] = [];
     setIsRunning(RunStatus.Running);
     await delay(DELAY_TIME_MS);
-    for (let i = adjList.length - 1; i >= 0; i--) {
+    for (let i = 0; i < adjList.length; i++) {
       if (order[graphData.nodes[i].id] === -1) {
-        await tarjan(
+        tarjan(
           graphData.nodes[i],
           adjList,
           edgeDict,
@@ -192,11 +190,13 @@ const Graph = () => {
           low,
           vis,
           stack,
-          DELAY_TIME_MS
+          result
         );
       }
     }
 
+    setTransitionFrames(result);
+    await playTransition(result, DELAY_TIME_MS);
     setIsRunning(RunStatus.Complete);
     await delay(DELAY_TIME_MS);
   };
@@ -212,9 +212,9 @@ const Graph = () => {
         setCooldownTime(0);
       })();
     } else {
-      const LINK_LENGTH_CONSTANT = 30;
+      const LINK_LENGTH_CONSTANT = 50;
       const fg = fgRef.current!;
-      fg.d3Force('charge', d3Force.forceManyBody().strength(-300));
+      fg.d3Force('charge', d3Force.forceManyBody().strength(-250));
       fg.d3Force('link')!.distance(() => LINK_LENGTH_CONSTANT);
     }
   }, [graphData]);
@@ -233,6 +233,7 @@ const Graph = () => {
           backgroundColor='black'
           enablePanInteraction={true}
           autoPauseRedraw
+          onEngineStop={() => fgRef.current!.zoomToFit(500)}
           // node attr
           enableNodeDrag={true}
           nodeRelSize={10}
@@ -252,6 +253,9 @@ const Graph = () => {
           linkCurvature={(link) => {
             let cnt = 0;
             const tmp = graphData.links;
+            // self edge
+            if (link.source === link.target) return 0.8;
+
             for (let i = 0; i < tmp.length; i++) {
               if (
                 tmp[i].source === link.source &&
@@ -267,14 +271,19 @@ const Graph = () => {
 
             return cnt === 2 ? 0.1 : 0;
           }}
-          // dagMode='td'
-          // dagLevelDistance={50}
+          // dagMode='lr'
+          // dagLevelDistance={100}
         />
       </div>
       <div className='w-full'>
-        <Button disabled={isRunning !== RunStatus.Incomplete} onClick={run}>
-          {isRunning ? 'Running' : 'Run'}
-        </Button>
+        <div className='w-full'>
+          <Button disabled={isRunning !== RunStatus.Incomplete} onClick={run}>
+            {isRunning ? 'Running' : 'Run'}
+          </Button>
+          {/* <Button disabled={false} onClick={() => stepTransition()}>
+            Step Into
+          </Button> */}
+        </div>
         <Button
           disabled={isRunning === RunStatus.Running}
           onClick={() => {

@@ -29,7 +29,7 @@ export const genRandomTree = (n = 10) => {
 };
 
 export const genGraphFromJSON = async (filename: string) => {
-  const graph = await (await fetch('./src/example1.json')).json();
+  const graph = await (await fetch('./src/example/example1.json')).json();
   const nodes: INode[] = [];
   const links: IEdge[] = [];
   for (const id in graph) {
@@ -56,10 +56,27 @@ export const genGraphFromJSON = async (filename: string) => {
   } as IGraphData;
 };
 
+let n = 1;
+const MAX_N = 300;
 export const genRandomColor = () => {
-  return `#${Math.floor(Math.random() * 16777215).toString(16)}`;
-};
+  const rgb = [0, 0, 0];
+  let t = n;
+  n = (n + 1) % MAX_N;
+  for (let i = 0; i < 24; i++) {
+    rgb[i % 3] <<= 1;
+    rgb[i % 3] |= t & 0x01;
+    t >>= 1;
+  }
 
+  return (
+    '#' +
+    rgb.reduce(
+      (a, c) => (c > 0x0f ? c.toString(16) : '0' + c.toString(16)) + a,
+      ''
+    )
+  );
+  //   return `#${Math.floor(Math.random() * 16777215).toString(16)}`;
+};
 export const delay = async (ms: number) => {
   return new Promise((res) => setTimeout(res, ms));
 };
