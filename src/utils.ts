@@ -56,7 +56,7 @@ export const genGraphFromJSON = async (filename: string) => {
   } as IGraphData;
 };
 
-let n = 1;
+let n = Math.floor(Math.random() * 300) + 1;
 const MAX_N = 300;
 export const genRandomColor = () => {
   const rgb = [0, 0, 0];
@@ -83,8 +83,13 @@ export const delay = async (ms: number) => {
 
 export const makeAdjList = (graphData: IGraphData) => {
   const adjList: number[][] = graphData.nodes.map(() => []);
+
   graphData.links.forEach((each) => {
-    adjList[each.source.id].push(each.target.id);
+    if (each.source.id !== undefined) {
+      adjList[each.source.id].push(each.target.id);
+    } else {
+      adjList[each.source].push(each.target);
+    }
   });
 
   return adjList;
@@ -95,7 +100,11 @@ export const makeEdgeDict = (graphData: IGraphData) => {
     graphData.nodes.map(() => null)
   );
   graphData.links.forEach((each) => {
-    edgeDict[each.source.id][each.target.id] = each;
+    if (each.source.id !== undefined) {
+      edgeDict[each.source.id][each.target.id] = each;
+    } else {
+      edgeDict[each.source][each.target] = each;
+    }
   });
   return edgeDict as IEdge[][];
 };

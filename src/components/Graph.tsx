@@ -28,7 +28,8 @@ export const HIGHLIGHTED_EDGE_COLOR = '#00ff00';
 
 export interface ITransitionFrame {
   x: INode | IEdge;
-  color: string;
+  fromColor: string;
+  toColor: string;
 }
 
 export interface IGraphData {
@@ -64,6 +65,7 @@ const Graph = () => {
   const [transitionFrames, setTransitionFrames] = useState<ITransitionFrame[]>(
     []
   );
+  const [transitionFramesIdx, setTransitionFramesIdx] = useState(0);
 
   const changeEdgeColor = (edge: IEdge, color: string) => {
     const tmp = { ...graphData };
@@ -85,6 +87,7 @@ const Graph = () => {
   };
 
   const tarjan = (
+    gData: IGraphData,
     node: INode,
     adjList: number[][],
     edgeDict: IEdge[][],
@@ -99,15 +102,28 @@ const Graph = () => {
     low[node.id] = id[0]++;
     vis[node.id] = true;
     stack.push(node.id);
-    result.push({ x: node, color: DISCOVERED_NODE_COLOR });
+    result.push({
+      x: node,
+      fromColor: DEFAULT_NODE_COLOR,
+      toColor: DISCOVERED_NODE_COLOR,
+    });
     for (let i = 0; i < adjList[node.id].length; i++) {
       const j = adjList[node.id][i];
 
       if (order[j] === -1) {
-        result.push({ x: edgeDict[node.id][j], color: HIGHLIGHTED_EDGE_COLOR });
-        result.push({ x: edgeDict[node.id][j], color: DEFAULT_EDGE_COLOR });
+        result.push({
+          x: edgeDict[node.id][j],
+          fromColor: DEFAULT_EDGE_COLOR,
+          toColor: HIGHLIGHTED_EDGE_COLOR,
+        });
+        result.push({
+          x: edgeDict[node.id][j],
+          fromColor: HIGHLIGHTED_EDGE_COLOR,
+          toColor: DEFAULT_EDGE_COLOR,
+        });
         tarjan(
-          graphData.nodes[j],
+          gData,
+          gData.nodes[j],
           adjList,
           edgeDict,
           id,
@@ -128,61 +144,85 @@ const Graph = () => {
       while (stack[stack.length - 1] != node.id) {
         const i = stack.pop();
         vis[i!] = false;
-        result.push({ x: graphData.nodes[i!], color: color });
+        result.push({
+          x: gData.nodes[i!],
+          fromColor: DISCOVERED_NODE_COLOR,
+          toColor: color,
+        });
       }
 
       vis[stack.pop()!] = false;
-      result.push({ x: node, color: color });
+      result.push({
+        x: node,
+        fromColor: DISCOVERED_NODE_COLOR,
+        toColor: color,
+      });
     }
   };
 
   const resetGraph = () => {
+    setTransitionFramesIdx(0);
     graphData.nodes.forEach((each) =>
       changeNodeColor(each, DEFAULT_NODE_COLOR)
     );
   };
 
-  const stepTransition = (result: ITransitionFrame[], i: number) => {
+  const playNextTransition = (result: ITransitionFrame[], i: number) => {
     if ('id' in result[i].x) {
-      changeNodeColor(result[i].x as INode, result[i].color);
+      changeNodeColor(result[i].x as INode, result[i].toColor);
     } else {
-      changeEdgeColor(result[i].x as IEdge, result[i].color);
+      changeEdgeColor(result[i].x as IEdge, result[i].toColor);
     }
 
-    return i + 1;
+    setTransitionFramesIdx(i + 1);
   };
 
-  const playTransition = async (result: ITransitionFrame[], ms: number) => {
-    for (let i = 0; i < result.length; i++) {
-      if ('id' in result[i].x) {
-        changeNodeColor(result[i].x as INode, result[i].color);
-      } else {
-        changeEdgeColor(result[i].x as IEdge, result[i].color);
-      }
+  const playPrevTransition = (result: ITransitionFrame[], i: number) => {
+    i--;
+
+    if ('id' in result[i].x) {
+      changeNodeColor(result[i].x as INode, result[i].fromColor);
+    } else {
+      changeEdgeColor(result[i].x as IEdge, result[i].fromColor);
+    }
+
+    setTransitionFramesIdx(i);
+  };
+
+  const playTransitionToEnd = async (
+    result: ITransitionFrame[],
+    ms: number,
+    i: number
+  ) => {
+    for (let j = i; j < result.length; j++) {
+      playNextTransition(result, j);
+      // if ('id' in result[i].x) {
+      //   changeNodeColor(result[i].x as INode, result[i].color);
+      // } else {
+      //   changeEdgeColor(result[i].x as IEdge, result[i].color);
+      // }
 
       await delay(ms);
     }
   };
 
-  const run = async () => {
-    const DELAY_TIME_MS = 250;
+  const runTarjan = (gData: IGraphData) => {
     const MAX = 2e9 + 7;
     const id = [0];
 
-    const adjList = makeAdjList(graphData);
-    const edgeDict = makeEdgeDict(graphData);
+    const adjList = makeAdjList(gData);
+    const edgeDict = makeEdgeDict(gData);
 
     const order = adjList.map(() => -1);
     const low = adjList.map(() => MAX);
     const vis = adjList.map(() => false);
     const stack: number[] = [];
     const result: ITransitionFrame[] = [];
-    setIsRunning(RunStatus.Running);
-    await delay(DELAY_TIME_MS);
     for (let i = 0; i < adjList.length; i++) {
-      if (order[graphData.nodes[i].id] === -1) {
+      if (order[gData.nodes[i].id] === -1) {
         tarjan(
-          graphData.nodes[i],
+          gData,
+          gData.nodes[i],
           adjList,
           edgeDict,
           id,
@@ -196,9 +236,6 @@ const Graph = () => {
     }
 
     setTransitionFrames(result);
-    await playTransition(result, DELAY_TIME_MS);
-    setIsRunning(RunStatus.Complete);
-    await delay(DELAY_TIME_MS);
   };
 
   useEffect(() => {
@@ -207,7 +244,9 @@ const Graph = () => {
       // setGraphData(dummyGraph);
 
       (async () => {
-        setGraphData(await genGraphFromJSON(''));
+        const gData = await genGraphFromJSON('');
+        runTarjan(gData);
+        setGraphData(gData);
         await delay(cooldownTime);
         setCooldownTime(0);
       })();
@@ -276,22 +315,57 @@ const Graph = () => {
         />
       </div>
       <div className='w-full'>
-        <div className='w-full'>
-          <Button disabled={isRunning !== RunStatus.Incomplete} onClick={run}>
-            {isRunning ? 'Running' : 'Run'}
-          </Button>
-          {/* <Button disabled={false} onClick={() => stepTransition()}>
-            Step Into
-          </Button> */}
+        <div className='w-fit mx-auto'>
+          <div className='w-full inline-block'>
+            <Button
+              disabled={
+                isRunning !== RunStatus.Incomplete || transitionFramesIdx === 0
+              }
+              onClick={() =>
+                playPrevTransition(transitionFrames, transitionFramesIdx)
+              }>
+              Prev
+            </Button>
+            <Button
+              disabled={
+                isRunning !== RunStatus.Incomplete ||
+                transitionFramesIdx === transitionFrames.length
+              }
+              onClick={async () => {
+                setIsRunning(RunStatus.Running);
+                await delay(250);
+                await playTransitionToEnd(
+                  transitionFrames,
+                  250,
+                  transitionFramesIdx
+                );
+                setIsRunning(RunStatus.Complete);
+                await delay(250);
+              }}>
+              {isRunning ? 'Running' : 'Run'}
+            </Button>
+            <Button
+              disabled={
+                isRunning !== RunStatus.Incomplete ||
+                transitionFramesIdx === transitionFrames.length
+              }
+              onClick={() =>
+                playNextTransition(transitionFrames, transitionFramesIdx)
+              }>
+              Next
+            </Button>
+          </div>
         </div>
-        <Button
-          disabled={isRunning === RunStatus.Running}
-          onClick={() => {
-            resetGraph();
-            setIsRunning(RunStatus.Incomplete);
-          }}>
-          Reset
-        </Button>
+        <div className='w-fit mx-auto'>
+          <Button
+            disabled={isRunning === RunStatus.Running}
+            onClick={() => {
+              resetGraph();
+              setIsRunning(RunStatus.Incomplete);
+            }}>
+            Reset
+          </Button>
+        </div>
       </div>
     </>
   );
