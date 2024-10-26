@@ -196,12 +196,6 @@ const Graph = () => {
   ) => {
     for (let j = i; j < result.length; j++) {
       playNextTransition(result, j);
-      // if ('id' in result[i].x) {
-      //   changeNodeColor(result[i].x as INode, result[i].color);
-      // } else {
-      //   changeEdgeColor(result[i].x as IEdge, result[i].color);
-      // }
-
       await delay(ms);
     }
   };
@@ -259,15 +253,16 @@ const Graph = () => {
   }, [graphData]);
 
   return (
-    <>
-      <div className='overflow-hidden mt-3'>
+    <div className=''>
+      <h3 className='text-white text-xl mb-3'>Visualisation</h3>
+      <div>
         <ForceGraph2D
           ref={fgRef}
           graphData={graphData}
           // cooldownTicks={100}
           cooldownTime={cooldownTime}
-          height={screen.height * 0.65}
-          width={screen.width}
+          height={screen.height * 0.55}
+          width={screen.width * 0.65}
           maxZoom={5}
           backgroundColor='black'
           enablePanInteraction={true}
@@ -319,11 +314,14 @@ const Graph = () => {
           <div className='w-full inline-block'>
             <Button
               disabled={
-                isRunning !== RunStatus.Incomplete || transitionFramesIdx === 0
+                isRunning === RunStatus.Running || transitionFramesIdx === 0
               }
-              onClick={() =>
-                playPrevTransition(transitionFrames, transitionFramesIdx)
-              }>
+              onClick={() => {
+                playPrevTransition(transitionFrames, transitionFramesIdx);
+                if (0 === transitionFramesIdx) {
+                  setIsRunning(RunStatus.Incomplete);
+                }
+              }}>
               Prev
             </Button>
             <Button
@@ -346,12 +344,15 @@ const Graph = () => {
             </Button>
             <Button
               disabled={
-                isRunning !== RunStatus.Incomplete ||
+                isRunning === RunStatus.Running ||
                 transitionFramesIdx === transitionFrames.length
               }
-              onClick={() =>
-                playNextTransition(transitionFrames, transitionFramesIdx)
-              }>
+              onClick={() => {
+                playNextTransition(transitionFrames, transitionFramesIdx);
+                if (transitionFramesIdx === transitionFrames.length) {
+                  setIsRunning(RunStatus.Complete);
+                }
+              }}>
               Next
             </Button>
           </div>
@@ -367,7 +368,7 @@ const Graph = () => {
           </Button>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
