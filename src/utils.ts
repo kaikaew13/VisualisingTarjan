@@ -4,7 +4,7 @@ import {
   IEdge,
   IGraphData,
   INode,
-} from './components/Graph';
+} from './components/GraphContainer';
 
 export const genRandomTree = (n = 10) => {
   return {
@@ -28,8 +28,7 @@ export const genRandomTree = (n = 10) => {
   };
 };
 
-export const genGraphFromJSON = async (filename: string) => {
-  const graph = await (await fetch('./src/example/example1.json')).json();
+export const genGraphFromObject = (graph: any) => {
   const nodes: INode[] = [];
   const links: IEdge[] = [];
   for (const id in graph) {
@@ -54,6 +53,12 @@ export const genGraphFromJSON = async (filename: string) => {
     nodes,
     links,
   } as IGraphData;
+};
+
+export const genGraphFromJSON = async (filename: string) => {
+  const graph = await (await fetch(filename)).json();
+
+  return genGraphFromObject(graph);
 };
 
 let n = Math.floor(Math.random() * 300) + 1;
@@ -107,4 +112,21 @@ export const makeEdgeDict = (graphData: IGraphData) => {
     }
   });
   return edgeDict as IEdge[][];
+};
+
+export const getUandVVertices = (adjList: number[][]) => {
+  const U: number[] = [];
+  const V: number[] = [];
+  adjList.forEach((each, i) => {
+    if (each.length === 0) {
+      V.push(i);
+    } else {
+      U.push(i);
+    }
+  });
+
+  const diff = Math.min(...V);
+
+  for (let i = 0; i < V.length; i++) V[i] -= diff;
+  return { U, V, diff };
 };

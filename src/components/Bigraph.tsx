@@ -1,3 +1,4 @@
+import React, { useEffect, useState } from 'react';
 import ForceGraph2D, {
   ForceGraphMethods,
   LinkObject,
@@ -5,22 +6,24 @@ import ForceGraph2D, {
 import * as d3Force from 'd3-force';
 
 import { IEdge, IGraphData } from './GraphContainer';
-import { useEffect, useState } from 'react';
 import { delay, genGraphFromJSON } from '../utils';
 
-interface GraphProps {
+interface BigraphProps {
   graphData: IGraphData;
   fgRef: React.MutableRefObject<ForceGraphMethods<any, LinkObject<any, IEdge>>>;
   tarjanCallback: (gData: IGraphData) => void;
 }
 
-const Graph = ({ graphData, fgRef, tarjanCallback }: GraphProps) => {
+const Bigraph = ({ graphData, fgRef, tarjanCallback }: BigraphProps) => {
   const [cooldownTime, setCooldownTime] = useState(1500);
 
   useEffect(() => {
     if (graphData.links.length === 0) {
+      // setGraphData(genRandomTree(10) as IGraphData);
+      // setGraphData(dummyGraph);
+
       (async () => {
-        const gData = await genGraphFromJSON('./src/example/example1.json');
+        const gData = await genGraphFromJSON('./src/example/example4.json');
         tarjanCallback(gData);
         // runTarjan(gData);
         // setGraphData(gData);
@@ -34,7 +37,6 @@ const Graph = ({ graphData, fgRef, tarjanCallback }: GraphProps) => {
       fg.d3Force('link')!.distance(() => LINK_LENGTH_CONSTANT);
     }
   }, [graphData]);
-
   return (
     <ForceGraph2D
       ref={fgRef}
@@ -62,27 +64,27 @@ const Graph = ({ graphData, fgRef, tarjanCallback }: GraphProps) => {
         ctx.fillText(label, node.x, node.y);
       }}
       // link attr
-      linkDirectionalArrowLength={5}
-      linkDirectionalArrowRelPos={1}
-      linkCurvature={(link) => {
-        let cnt = 0;
-        const tmp = graphData.links;
-        // self edge
-        if (link.source === link.target) return 0.8;
+      //   linkDirectionalArrowLength={5}
+      //   linkDirectionalArrowRelPos={1}
+      //   linkCurvature={(link) => {
+      //     let cnt = 0;
+      //     const tmp = graphData.links;
+      //     // self edge
+      //     if (link.source === link.target) return 0.8;
 
-        for (let i = 0; i < tmp.length; i++) {
-          if (tmp[i].source === link.source && tmp[i].target === link.target)
-            cnt++;
-          if (tmp[i].source === link.target && tmp[i].target === link.source)
-            cnt++;
-        }
+      //     for (let i = 0; i < tmp.length; i++) {
+      //       if (tmp[i].source === link.source && tmp[i].target === link.target)
+      //         cnt++;
+      //       if (tmp[i].source === link.target && tmp[i].target === link.source)
+      //         cnt++;
+      //     }
 
-        return cnt === 2 ? 0.1 : 0;
-      }}
-      // dagMode='lr'
-      // dagLevelDistance={100}
+      //     return cnt === 2 ? 0.1 : 0;
+      //   }}
+      dagMode='lr'
+      dagLevelDistance={120}
     />
   );
 };
 
-export default Graph;
+export default Bigraph;
