@@ -10,11 +10,17 @@ import { delay, genGraphFromJSON } from '../utils';
 
 interface BigraphProps {
   graphData: IGraphData;
+  adjList: number[][];
   fgRef: React.MutableRefObject<ForceGraphMethods<any, LinkObject<any, IEdge>>>;
   tarjanCallback: (gData: IGraphData) => void;
 }
 
-const Bigraph = ({ graphData, fgRef, tarjanCallback }: BigraphProps) => {
+const Bigraph = ({
+  graphData,
+  adjList,
+  fgRef,
+  tarjanCallback,
+}: BigraphProps) => {
   const [cooldownTime, setCooldownTime] = useState(1500);
 
   useEffect(() => {
@@ -23,7 +29,7 @@ const Bigraph = ({ graphData, fgRef, tarjanCallback }: BigraphProps) => {
       // setGraphData(dummyGraph);
 
       (async () => {
-        const gData = await genGraphFromJSON('./src/example/example4.json');
+        const gData = await genGraphFromJSON('./src/example/example5.json');
         tarjanCallback(gData);
         // runTarjan(gData);
         // setGraphData(gData);
@@ -33,10 +39,10 @@ const Bigraph = ({ graphData, fgRef, tarjanCallback }: BigraphProps) => {
     } else {
       const LINK_LENGTH_CONSTANT = 50;
       const fg = fgRef.current!;
-      fg.d3Force('charge', d3Force.forceManyBody().strength(-250));
+      fg.d3Force('charge', d3Force.forceManyBody().strength(-200));
       fg.d3Force('link')!.distance(() => LINK_LENGTH_CONSTANT);
     }
-  }, [graphData]);
+  }, [graphData, adjList]);
   return (
     <ForceGraph2D
       ref={fgRef}
@@ -82,7 +88,7 @@ const Bigraph = ({ graphData, fgRef, tarjanCallback }: BigraphProps) => {
       //     return cnt === 2 ? 0.1 : 0;
       //   }}
       dagMode='lr'
-      dagLevelDistance={120}
+      dagLevelDistance={100}
     />
   );
 };

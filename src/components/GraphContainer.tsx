@@ -31,7 +31,7 @@ export const DEFAULT_EDGE_COLOR = '#ccc';
 export const HIGHLIGHTED_EDGE_COLOR = '#00ff00';
 
 export interface ITransitionFrame {
-  x: INode | IEdge;
+  x: INode | IEdge | INode[] | IEdge[];
   fromColor: string;
   toColor: string;
 }
@@ -65,6 +65,7 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
     nodes: [],
     links: [],
   });
+  const [adjList, setAdjList] = useState<number[][]>([]);
   const [transitionFrames, setTransitionFrames] = useState<ITransitionFrame[]>(
     []
   );
@@ -107,23 +108,32 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
     stack.push(node.id);
     result.push({
       x: node,
-      fromColor: DEFAULT_NODE_COLOR,
+      fromColor: node.color!,
       toColor: DISCOVERED_NODE_COLOR,
     });
     for (let i = 0; i < adjList[node.id].length; i++) {
       const j = adjList[node.id][i];
 
       if (order[j] === -1) {
+        let edge = edgeDict[node.id][j];
+        // if (
+        //   graphData.links.length > 0 &&
+        //   graphData.links.find((each) => each.name === edge.name) === undefined
+        // ) {
+        //   edge = edgeDict[j][node.id];
+        // }
+
         result.push({
-          x: edgeDict[node.id][j],
-          fromColor: DEFAULT_EDGE_COLOR,
+          x: edge,
+          fromColor: edge.color!,
           toColor: HIGHLIGHTED_EDGE_COLOR,
         });
         result.push({
-          x: edgeDict[node.id][j],
+          x: edge,
           fromColor: HIGHLIGHTED_EDGE_COLOR,
-          toColor: DEFAULT_EDGE_COLOR,
+          toColor: edge.color!,
         });
+
         tarjan(
           gData,
           gData.nodes[j],
@@ -174,10 +184,21 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
   };
 
   const playNextTransition = (result: ITransitionFrame[], i: number) => {
-    if ('id' in result[i].x) {
-      changeNodeColor(result[i].x as INode, result[i].toColor);
+    if (Array.isArray(result[i].x)) {
+      for (let j = 0; j < result[i].x.length; j++) {
+        const tmp = result[i].x as IEdge[] | INode[];
+        if ('id' in tmp[j]) {
+          changeNodeColor(tmp[j] as INode, result[i].toColor);
+        } else {
+          changeEdgeColor(tmp[j] as IEdge, result[i].toColor);
+        }
+      }
     } else {
-      changeEdgeColor(result[i].x as IEdge, result[i].toColor);
+      if ('id' in result[i].x) {
+        changeNodeColor(result[i].x as INode, result[i].toColor);
+      } else {
+        changeEdgeColor(result[i].x as IEdge, result[i].toColor);
+      }
     }
 
     setTransitionFramesIdx(i + 1);
@@ -206,7 +227,11 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
     }
   };
 
-  const runTarjan = (gData: IGraphData, adjList: number[][]) => {
+  const runTarjan = (
+    gData: IGraphData,
+    adjList: number[][],
+    result: ITransitionFrame[] = []
+  ) => {
     const MAX = 2e9 + 7;
     const id = [0];
 
@@ -216,7 +241,8 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
     const low = adjList.map(() => MAX);
     const vis = adjList.map(() => false);
     const stack: number[] = [];
-    const result: ITransitionFrame[] = [];
+    // const result: ITransitionFrame[] = [];
+
     for (let i = 0; i < adjList.length; i++) {
       if (order[gData.nodes[i].id] === -1) {
         tarjan(
@@ -237,7 +263,7 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
     setTransitionFrames(result);
   };
 
-  const runHopcroftKarp = (gData: IGraphData, adjList: number[][]) => {
+  const runHopcroftKarp = (gData: IGraphData) => {
     const { U, V, diff } = getUandVVertices(adjList);
     const tmpAdjList: number[][] = [...Array(U.length + 1)].map(() => []);
     adjList.forEach((each, i) => {
@@ -249,7 +275,6 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
     const { pairU } = hopcroftKarp(U, V, tmpAdjList);
     pairU.shift();
     for (let i = 0; i < U.length; i++) pairU[i] += diff - 1;
-    console.log(pairU);
 
     const newAdjList: number[][] = [...Array(adjList.length)].map(() => []);
     adjList.forEach((each, i) => {
@@ -262,10 +287,33 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
       });
     });
     const edgeDict = makeEdgeDict(gData);
-    // setGraphData(genGraphFromObject({ ...newAdjList }));
+
+    const result: ITransitionFrame[] = [];
+    const maxMatchingEdges: IEdge[] = [];
     for (let i = 0; i < pairU.length; i++) {
-      changeEdgeColor(edgeDict[i][pairU[i]], '#00ff00');
+      maxMatchingEdges.push(edgeDict[i][pairU[i]]);
+      // result.push({
+      //   x: edgeDict[i][pairU[i]],
+      //   fromColor: DEFAULT_EDGE_COLOR,
+      //   toColor: '#00aaff',
+      // });
+      // changeEdgeColor(edgeDict[i][pairU[i]], '#00aaff');
     }
+
+    result.push({
+      x: maxMatchingEdges,
+      fromColor: DEFAULT_EDGE_COLOR,
+      toColor: '#00aaff',
+    });
+    const newGData = genGraphFromObject({ ...newAdjList });
+    maxMatchingEdges.forEach((each) => {
+      const tmp = newGData.links.find((each_) => each_.name === each.name);
+      if (tmp) tmp.color = '#00aaff';
+    });
+    // setAdjList(newAdjList);
+    // setGraphData(newGData);
+
+    runTarjan(newGData, newAdjList, result);
   };
 
   const hopcroftKarp = (U: number[], V: number[], adj: number[][]) => {
@@ -347,26 +395,33 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
         {tab === Tabs.SCC ? (
           <Graph
             graphData={graphData}
+            adjList={adjList}
             fgRef={
               fgRef as React.MutableRefObject<
                 ForceGraphMethods<any, LinkObject<any, IEdge>>
               >
             }
             tarjanCallback={(gData) => {
-              runTarjan(gData, makeAdjList(gData));
+              const adjList = makeAdjList(gData);
+              setAdjList(adjList);
+              runTarjan(gData, adjList);
               setGraphData(gData);
             }}
           />
         ) : (
           <Bigraph
             graphData={graphData}
+            adjList={adjList}
             fgRef={
               fgRef as React.MutableRefObject<
                 ForceGraphMethods<any, LinkObject<any, IEdge>>
               >
             }
             tarjanCallback={(gData) => {
-              runTarjan(gData, makeAdjList(gData));
+              const adjList = makeAdjList(gData);
+              setAdjList(adjList);
+              // runTarjan(gData, adjList);
+              runHopcroftKarp(gData);
               setGraphData(gData);
             }}
           />
@@ -418,6 +473,11 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
               }}>
               Next
             </Button>
+            {tab === Tabs.AllDifferent && (
+              <Button disabled={false} onClick={() => {}}>
+                Find Max Matching
+              </Button>
+            )}
           </div>
         </div>
         <div className='w-fit mx-auto'>
@@ -428,13 +488,6 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
               setIsRunning(RunStatus.Incomplete);
             }}>
             Reset
-          </Button>
-          <Button
-            disabled={false}
-            onClick={() => {
-              runHopcroftKarp(graphData, makeAdjList(graphData));
-            }}>
-            test
           </Button>
         </div>
       </div>
