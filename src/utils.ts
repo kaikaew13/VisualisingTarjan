@@ -111,6 +111,7 @@ export const makeEdgeDict = (graphData: IGraphData) => {
       edgeDict[each.source][each.target] = each;
     }
   });
+
   return edgeDict as IEdge[][];
 };
 

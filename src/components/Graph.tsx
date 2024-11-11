@@ -10,12 +10,11 @@ import { delay, genGraphFromJSON } from '../utils';
 
 interface GraphProps {
   graphData: IGraphData;
-  adjList: number[][];
   fgRef: React.MutableRefObject<ForceGraphMethods<any, LinkObject<any, IEdge>>>;
   tarjanCallback: (gData: IGraphData) => void;
 }
 
-const Graph = ({ graphData, adjList, fgRef, tarjanCallback }: GraphProps) => {
+const Graph = ({ graphData, fgRef, tarjanCallback }: GraphProps) => {
   const [cooldownTime, setCooldownTime] = useState(1500);
 
   useEffect(() => {
@@ -34,7 +33,7 @@ const Graph = ({ graphData, adjList, fgRef, tarjanCallback }: GraphProps) => {
       fg.d3Force('charge', d3Force.forceManyBody().strength(-250));
       fg.d3Force('link')!.distance(() => LINK_LENGTH_CONSTANT);
     }
-  }, [graphData, adjList]);
+  }, [graphData]);
 
   return (
     <ForceGraph2D

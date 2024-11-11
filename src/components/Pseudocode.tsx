@@ -86,7 +86,7 @@ const Pseudocode = () => {
           height: '100%',
         }}
       />
-      <Button onClick={highlightCodeToEnd}>HELLO</Button>
+      <Button onClick={highlightCodeToEnd}>Test</Button>
     </div>
   );
 };

@@ -17,9 +17,12 @@ function Button({
     // <div className='w-fit mx-auto my-2'>
     <button
       disabled={disabled}
-      className={` ${focus && 'bg-gray-300 text-[#111111] hover:bg-gray-400'}
-      my-2 mx-auto p-2 border border-gray-300 disabled:cursor-not-allowed disabled:text-gray-400 text-white
-      hover:bg-[#222222]`}
+      className={` ${
+        focus &&
+        'bg-[#888888] text-[#111111] hover:bg-[#aaaaaa] hover:border-[#aaaaaa]'
+      }
+      my-2 mx-auto p-2 border border-[#888888] disabled:cursor-not-allowed disabled:text-[#999999] text-[#ccc]
+      hover:bg-[#333333]`}
       onClick={onClick}>
       {children}
     </button>

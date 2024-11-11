@@ -8,7 +8,6 @@ import {
   getUandVVertices,
   genGraphFromObject,
 } from '../utils';
-import * as d3Force from 'd3-force';
 
 import Button from './Button';
 import { Tabs } from '../App';
@@ -25,8 +24,8 @@ interface GraphContainerProps {
   tab: Tabs;
 }
 
-export const DEFAULT_NODE_COLOR = '#ff0000';
-export const DISCOVERED_NODE_COLOR = '#808080';
+export const DEFAULT_NODE_COLOR = '#333333';
+export const DISCOVERED_NODE_COLOR = '#888888';
 export const DEFAULT_EDGE_COLOR = '#ccc';
 export const HIGHLIGHTED_EDGE_COLOR = '#00ff00';
 
@@ -65,11 +64,15 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
     nodes: [],
     links: [],
   });
-  const [adjList, setAdjList] = useState<number[][]>([]);
+  const [tmpGraphData, setTmpGraphData] = useState<IGraphData>({
+    nodes: [],
+    links: [],
+  });
   const [transitionFrames, setTransitionFrames] = useState<ITransitionFrame[]>(
     []
   );
   const [transitionFramesIdx, setTransitionFramesIdx] = useState(0);
+  const [isDirected, setIsDirected] = useState(false);
 
   const changeEdgeColor = (edge: IEdge, color: string) => {
     const tmp = { ...graphData };
@@ -116,12 +119,6 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
 
       if (order[j] === -1) {
         let edge = edgeDict[node.id][j];
-        // if (
-        //   graphData.links.length > 0 &&
-        //   graphData.links.find((each) => each.name === edge.name) === undefined
-        // ) {
-        //   edge = edgeDict[j][node.id];
-        // }
 
         result.push({
           x: edge,
@@ -178,9 +175,18 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
     graphData.nodes.forEach((each) =>
       changeNodeColor(each, DEFAULT_NODE_COLOR)
     );
-    graphData.links.forEach((each) =>
-      changeEdgeColor(each, DEFAULT_EDGE_COLOR)
-    );
+    if (tab === Tabs.SCC) {
+      graphData.links.forEach((each) =>
+        changeEdgeColor(each, DEFAULT_EDGE_COLOR)
+      );
+    } else {
+      const tmp = { ...tmpGraphData };
+      const tmp2 = { ...graphData };
+      setTmpGraphData(tmp2);
+      setGraphData(tmp);
+      setIsDirected(false);
+      console.log(tmp2);
+    }
   };
 
   const playNextTransition = (result: ITransitionFrame[], i: number) => {
@@ -227,11 +233,8 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
     }
   };
 
-  const runTarjan = (
-    gData: IGraphData,
-    adjList: number[][],
-    result: ITransitionFrame[] = []
-  ) => {
+  const runTarjan = (gData: IGraphData, adjList: number[][]) => {
+    setTmpGraphData(gData);
     const MAX = 2e9 + 7;
     const id = [0];
 
@@ -241,7 +244,7 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
     const low = adjList.map(() => MAX);
     const vis = adjList.map(() => false);
     const stack: number[] = [];
-    // const result: ITransitionFrame[] = [];
+    const result: ITransitionFrame[] = [];
 
     for (let i = 0; i < adjList.length; i++) {
       if (order[gData.nodes[i].id] === -1) {
@@ -263,7 +266,7 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
     setTransitionFrames(result);
   };
 
-  const runHopcroftKarp = (gData: IGraphData) => {
+  const runHopcroftKarp = (gData: IGraphData, adjList: number[][]) => {
     const { U, V, diff } = getUandVVertices(adjList);
     const tmpAdjList: number[][] = [...Array(U.length + 1)].map(() => []);
     adjList.forEach((each, i) => {
@@ -272,48 +275,39 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
       }
     });
 
-    const { pairU } = hopcroftKarp(U, V, tmpAdjList);
-    pairU.shift();
-    for (let i = 0; i < U.length; i++) pairU[i] += diff - 1;
+    const res = hopcroftKarp(U, V, tmpAdjList);
+
+    res.pairU.shift();
+    for (let i = 0; i < U.length; i++) res.pairU[i] += diff - 1;
 
     const newAdjList: number[][] = [...Array(adjList.length)].map(() => []);
     adjList.forEach((each, i) => {
       each.forEach((each_) => {
-        if (pairU[i] === each_) {
+        if (res.pairU[i] === each_) {
           newAdjList[i].push(each_);
         } else {
           newAdjList[each_].push(i);
         }
       });
     });
-    const edgeDict = makeEdgeDict(gData);
 
-    const result: ITransitionFrame[] = [];
+    const edgeDict = makeEdgeDict(gData);
+    const newGData = genGraphFromObject({ ...newAdjList });
+
     const maxMatchingEdges: IEdge[] = [];
-    for (let i = 0; i < pairU.length; i++) {
-      maxMatchingEdges.push(edgeDict[i][pairU[i]]);
-      // result.push({
-      //   x: edgeDict[i][pairU[i]],
-      //   fromColor: DEFAULT_EDGE_COLOR,
-      //   toColor: '#00aaff',
-      // });
-      // changeEdgeColor(edgeDict[i][pairU[i]], '#00aaff');
+
+    for (let i = 0; i < res.pairU.length; i++) {
+      maxMatchingEdges.push(edgeDict[i][res.pairU[i]]);
     }
 
-    result.push({
-      x: maxMatchingEdges,
-      fromColor: DEFAULT_EDGE_COLOR,
-      toColor: '#00aaff',
-    });
-    const newGData = genGraphFromObject({ ...newAdjList });
     maxMatchingEdges.forEach((each) => {
       const tmp = newGData.links.find((each_) => each_.name === each.name);
       if (tmp) tmp.color = '#00aaff';
     });
-    // setAdjList(newAdjList);
-    // setGraphData(newGData);
 
-    runTarjan(newGData, newAdjList, result);
+    // setTmpGraphData(newGData);
+
+    runTarjan(newGData, newAdjList);
   };
 
   const hopcroftKarp = (U: number[], V: number[], adj: number[][]) => {
@@ -395,7 +389,6 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
         {tab === Tabs.SCC ? (
           <Graph
             graphData={graphData}
-            adjList={adjList}
             fgRef={
               fgRef as React.MutableRefObject<
                 ForceGraphMethods<any, LinkObject<any, IEdge>>
@@ -403,7 +396,6 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
             }
             tarjanCallback={(gData) => {
               const adjList = makeAdjList(gData);
-              setAdjList(adjList);
               runTarjan(gData, adjList);
               setGraphData(gData);
             }}
@@ -411,25 +403,43 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
         ) : (
           <Bigraph
             graphData={graphData}
-            adjList={adjList}
             fgRef={
               fgRef as React.MutableRefObject<
                 ForceGraphMethods<any, LinkObject<any, IEdge>>
               >
             }
             tarjanCallback={(gData) => {
+              setIsDirected(false);
               const adjList = makeAdjList(gData);
-              setAdjList(adjList);
-              // runTarjan(gData, adjList);
-              runHopcroftKarp(gData);
+              runHopcroftKarp(gData, adjList);
               setGraphData(gData);
             }}
+            isDirected={isDirected}
           />
         )}
       </div>
       <div className='w-full'>
         <div className='w-fit mx-auto'>
           <div className='w-full inline-block'>
+            {tab === Tabs.AllDifferent && (
+              <Button
+                disabled={isDirected}
+                onClick={() => {
+                  setIsDirected(true);
+                  const tmp = { ...tmpGraphData };
+                  const tmp2 = { ...graphData };
+                  graphData.nodes.forEach((each, i) => {
+                    tmp.nodes[i].x = each.x;
+                    tmp.nodes[i].y = each.y;
+                  });
+
+                  setGraphData(tmp);
+                  setTmpGraphData(tmp2);
+                  console.log(tmp);
+                }}>
+                Find max matching
+              </Button>
+            )}
             <Button
               disabled={
                 isRunning === RunStatus.Running || transitionFramesIdx === 0
@@ -473,11 +483,6 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
               }}>
               Next
             </Button>
-            {tab === Tabs.AllDifferent && (
-              <Button disabled={false} onClick={() => {}}>
-                Find Max Matching
-              </Button>
-            )}
           </div>
         </div>
         <div className='w-fit mx-auto'>
