@@ -29,11 +29,8 @@ const Bigraph = ({
       // setGraphData(dummyGraph);
 
       (async () => {
-        const gData = await genGraphFromJSON('./src/example/example4.json');
+        const gData = await genGraphFromJSON('./src/example/example5.json');
         tarjanCallback(gData);
-
-        // runTarjan(gData);
-        // setGraphData(gData);
         await delay(cooldownTime);
         setCooldownTime(0);
       })();
@@ -93,7 +90,6 @@ const Bigraph = ({
         dagMode={!isDirected ? 'lr' : undefined}
         dagLevelDistance={100}
       />
-      {/* <Button onClick={() => setShowDirection((val) => !val)}>Click</Button> */}
     </>
   );
 };

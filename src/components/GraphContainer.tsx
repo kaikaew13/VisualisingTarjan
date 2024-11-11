@@ -175,17 +175,16 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
     graphData.nodes.forEach((each) =>
       changeNodeColor(each, DEFAULT_NODE_COLOR)
     );
-    if (tab === Tabs.SCC) {
-      graphData.links.forEach((each) =>
-        changeEdgeColor(each, DEFAULT_EDGE_COLOR)
-      );
-    } else {
+    graphData.links.forEach((each) => {
+      if (each.color === HIGHLIGHTED_EDGE_COLOR)
+        changeEdgeColor(each, DEFAULT_EDGE_COLOR);
+    });
+    if (tab === Tabs.AllDifferent) {
       const tmp = { ...tmpGraphData };
       const tmp2 = { ...graphData };
       setTmpGraphData(tmp2);
       setGraphData(tmp);
       setIsDirected(false);
-      console.log(tmp2);
     }
   };
 
@@ -442,7 +441,9 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
             )}
             <Button
               disabled={
-                isRunning === RunStatus.Running || transitionFramesIdx === 0
+                (tab === Tabs.AllDifferent && !isDirected) ||
+                isRunning === RunStatus.Running ||
+                transitionFramesIdx === 0
               }
               onClick={() => {
                 playPrevTransition(transitionFrames, transitionFramesIdx);
@@ -454,6 +455,7 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
             </Button>
             <Button
               disabled={
+                (tab === Tabs.AllDifferent && !isDirected) ||
                 isRunning === RunStatus.Running ||
                 transitionFramesIdx === transitionFrames.length
               }
@@ -472,6 +474,7 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
             </Button>
             <Button
               disabled={
+                (tab === Tabs.AllDifferent && !isDirected) ||
                 isRunning === RunStatus.Running ||
                 transitionFramesIdx === transitionFrames.length
               }
