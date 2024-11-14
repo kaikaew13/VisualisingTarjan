@@ -5,7 +5,7 @@ import ForceGraph2D, {
 } from 'react-force-graph-2d';
 import * as d3Force from 'd3-force';
 
-import { IEdge, IGraphData } from './GraphContainer';
+import { GraphType, IEdge, IGraphData } from './GraphContainer';
 import { delay, genGraphFromJSON } from '../utils';
 
 interface BigraphProps {
@@ -21,24 +21,19 @@ const Bigraph = ({
   tarjanCallback,
   isDirected,
 }: BigraphProps) => {
-  const [cooldownTime, setCooldownTime] = useState(1500);
-
   useEffect(() => {
     if (graphData.links.length === 0) {
       // setGraphData(genRandomTree(10) as IGraphData);
       // setGraphData(dummyGraph);
 
       (async () => {
-        const gData = await genGraphFromJSON('./src/example/example5.json');
+        const gData = await genGraphFromJSON(
+          './src/example/example4.json',
+          GraphType.Bipartite
+        );
         tarjanCallback(gData);
-        await delay(cooldownTime);
-        setCooldownTime(0);
+        await delay(0);
       })();
-    } else {
-      const LINK_LENGTH_CONSTANT = 50;
-      const fg = fgRef.current!;
-      fg.d3Force('charge', d3Force.forceManyBody().strength(-200));
-      fg.d3Force('link')!.distance(() => LINK_LENGTH_CONSTANT);
     }
   }, [graphData]);
 
@@ -47,8 +42,7 @@ const Bigraph = ({
       <ForceGraph2D
         ref={fgRef}
         graphData={graphData}
-        // cooldownTicks={100}
-        cooldownTime={cooldownTime}
+        cooldownTime={0}
         height={screen.height * 0.55}
         width={screen.width * 0.65}
         maxZoom={5}
@@ -57,7 +51,7 @@ const Bigraph = ({
         autoPauseRedraw
         onEngineStop={() => fgRef!.current!.zoomToFit(500)}
         // node attr
-        enableNodeDrag={true}
+        enableNodeDrag={false}
         nodeRelSize={10}
         nodeCanvasObjectMode={() => 'after'}
         nodeCanvasObject={(node, ctx, globalScale) => {
@@ -70,7 +64,7 @@ const Bigraph = ({
           ctx.fillText(label, node.x, node.y);
         }}
         // link attr
-        linkDirectionalArrowLength={isDirected ? 5 : undefined}
+        linkDirectionalArrowLength={isDirected ? 8 : undefined}
         linkDirectionalArrowRelPos={isDirected ? 1 : undefined}
         //   linkCurvature={(link) => {
         //     let cnt = 0;
@@ -87,8 +81,8 @@ const Bigraph = ({
 
         //     return cnt === 2 ? 0.1 : 0;
         //   }}
-        dagMode={!isDirected ? 'lr' : undefined}
-        dagLevelDistance={100}
+        // dagMode={!isDirected ? 'lr' : undefined}
+        // dagLevelDistance={100}
       />
     </>
   );

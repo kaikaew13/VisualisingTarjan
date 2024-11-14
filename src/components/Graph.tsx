@@ -4,7 +4,7 @@ import ForceGraph2D, {
 } from 'react-force-graph-2d';
 import * as d3Force from 'd3-force';
 
-import { IEdge, IGraphData } from './GraphContainer';
+import { GraphType, IEdge, IGraphData } from './GraphContainer';
 import { useEffect, useState } from 'react';
 import { delay, genGraphFromJSON } from '../utils';
 
@@ -15,12 +15,15 @@ interface GraphProps {
 }
 
 const Graph = ({ graphData, fgRef, tarjanCallback }: GraphProps) => {
-  const [cooldownTime, setCooldownTime] = useState(1500);
+  const [cooldownTime, setCooldownTime] = useState(1000);
 
   useEffect(() => {
     if (graphData.links.length === 0) {
       (async () => {
-        const gData = await genGraphFromJSON('./src/example/example1.json');
+        const gData = await genGraphFromJSON(
+          './src/example/example1.json',
+          GraphType.Regular
+        );
         tarjanCallback(gData);
         // runTarjan(gData);
         // setGraphData(gData);
@@ -30,7 +33,7 @@ const Graph = ({ graphData, fgRef, tarjanCallback }: GraphProps) => {
     } else {
       const LINK_LENGTH_CONSTANT = 50;
       const fg = fgRef.current!;
-      fg.d3Force('charge', d3Force.forceManyBody().strength(-250));
+      fg.d3Force('charge', d3Force.forceManyBody().strength(-600));
       fg.d3Force('link')!.distance(() => LINK_LENGTH_CONSTANT);
     }
   }, [graphData]);
@@ -62,7 +65,7 @@ const Graph = ({ graphData, fgRef, tarjanCallback }: GraphProps) => {
         ctx.fillText(label, node.x, node.y);
       }}
       // link attr
-      linkDirectionalArrowLength={5}
+      linkDirectionalArrowLength={8}
       linkDirectionalArrowRelPos={1}
       linkCurvature={(link) => {
         let cnt = 0;

@@ -7,6 +7,8 @@ import {
   makeEdgeDict,
   getUandVVertices,
   genGraphFromObject,
+  getFirstRightNodeName,
+  getGraphObjFromIGraphData,
 } from '../utils';
 
 import Button from './Button';
@@ -18,6 +20,11 @@ enum RunStatus {
   Incomplete,
   Running,
   Complete,
+}
+
+export enum GraphType {
+  Regular,
+  Bipartite,
 }
 
 interface GraphContainerProps {
@@ -283,28 +290,33 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
     adjList.forEach((each, i) => {
       each.forEach((each_) => {
         if (res.pairU[i] === each_) {
-          newAdjList[i].push(each_);
-        } else {
           newAdjList[each_].push(i);
+        } else {
+          newAdjList[i].push(each_);
         }
       });
     });
 
-    const edgeDict = makeEdgeDict(gData);
-    const newGData = genGraphFromObject({ ...newAdjList });
+    const graphObj = getGraphObjFromIGraphData(gData, adjList);
+    const newGraphObj = getGraphObjFromIGraphData(gData, newAdjList);
+
+    const newGData = genGraphFromObject(
+      newGraphObj,
+      GraphType.Bipartite,
+      getFirstRightNodeName(graphObj)
+    );
+    const edgeDict = makeEdgeDict(newGData);
 
     const maxMatchingEdges: IEdge[] = [];
 
     for (let i = 0; i < res.pairU.length; i++) {
-      maxMatchingEdges.push(edgeDict[i][res.pairU[i]]);
+      maxMatchingEdges.push(edgeDict[res.pairU[i]][i]);
     }
 
     maxMatchingEdges.forEach((each) => {
       const tmp = newGData.links.find((each_) => each_.name === each.name);
       if (tmp) tmp.color = '#00aaff';
     });
-
-    // setTmpGraphData(newGData);
 
     runTarjan(newGData, newAdjList);
   };
@@ -434,7 +446,6 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
 
                   setGraphData(tmp);
                   setTmpGraphData(tmp2);
-                  console.log(tmp);
                 }}>
                 Find max matching
               </Button>

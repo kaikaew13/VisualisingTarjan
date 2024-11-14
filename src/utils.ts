@@ -1,6 +1,7 @@
 import {
   DEFAULT_EDGE_COLOR,
   DEFAULT_NODE_COLOR,
+  GraphType,
   IEdge,
   IGraphData,
   INode,
@@ -28,18 +29,35 @@ export const genRandomTree = (n = 10) => {
   };
 };
 
-export const genGraphFromObject = (graph: any) => {
+export const genGraphFromObject = (
+  graph: any,
+  graphType: GraphType,
+  firstRightNodeName = ''
+) => {
   const nodes: INode[] = [];
   const links: IEdge[] = [];
+  let x = -50;
+  let y = 0;
+  let switchsides = false;
   for (const id in graph) {
+    if (graph[id].name === firstRightNodeName) {
+      y = 0;
+      x = 50;
+      switchsides = true;
+    }
+
     nodes.push({
       id: parseInt(id),
       val: 1,
-      name: `node ${id}`,
+      name: graph[id].name,
       color: DEFAULT_NODE_COLOR,
+      x: graphType === GraphType.Regular ? undefined : x,
+      y: graphType === GraphType.Regular ? undefined : y,
+      fx: graphType === GraphType.Regular ? undefined : x,
+      fy: graphType === GraphType.Regular ? undefined : y,
     });
 
-    graph[id].forEach((each: string) =>
+    graph[id].children.forEach((each: string) =>
       links.push({
         source: parseInt(id),
         target: parseInt(each),
@@ -47,6 +65,7 @@ export const genGraphFromObject = (graph: any) => {
         color: DEFAULT_EDGE_COLOR,
       })
     );
+    y += 50;
   }
 
   return {
@@ -55,10 +74,12 @@ export const genGraphFromObject = (graph: any) => {
   } as IGraphData;
 };
 
-export const genGraphFromJSON = async (filename: string) => {
+export const genGraphFromJSON = async (
+  filename: string,
+  graphType: GraphType
+) => {
   const graph = await (await fetch(filename)).json();
-
-  return genGraphFromObject(graph);
+  return genGraphFromObject(graph, graphType, getFirstRightNodeName(graph));
 };
 
 let n = Math.floor(Math.random() * 300) + 1;
@@ -113,6 +134,36 @@ export const makeEdgeDict = (graphData: IGraphData) => {
   });
 
   return edgeDict as IEdge[][];
+};
+
+export const getFirstRightNodeName = (graph: any) => {
+  for (const id in graph) {
+    if (graph[id].children.length === 0) {
+      return graph[id].name;
+    }
+  }
+  return '';
+};
+
+export const getGraphObjFromIGraphData = (
+  graphData: IGraphData,
+  adjList: number[][]
+) => {
+  const tmp: { name: string; children: string[] }[] = [
+    ...Array(adjList.length),
+  ].map(() => {
+    return {
+      name: '',
+      children: [],
+    };
+  });
+
+  for (let i = 0; i < adjList.length; i++) {
+    tmp[i].name = graphData.nodes[i].name!;
+    adjList[i].forEach((each) => tmp[i].children.push(`${each}`));
+  }
+
+  return tmp as any;
 };
 
 export const getUandVVertices = (adjList: number[][]) => {
