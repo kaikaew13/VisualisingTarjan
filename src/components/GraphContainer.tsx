@@ -71,7 +71,12 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
     nodes: [],
     links: [],
   });
-  const [tmpGraphData, setTmpGraphData] = useState<IGraphData>({
+  const [graphDataEdgesRemoved, setGraphDataEdgesRemoved] =
+    useState<IGraphData>({
+      nodes: [],
+      links: [],
+    });
+  const [graphDataMaxMatching, setGraphDataMaxMatching] = useState<IGraphData>({
     nodes: [],
     links: [],
   });
@@ -80,6 +85,7 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
   );
   const [transitionFramesIdx, setTransitionFramesIdx] = useState(0);
   const [isDirected, setIsDirected] = useState(false);
+  const [isDone, setIsDone] = useState(false);
 
   const changeEdgeColor = (edge: IEdge, color: string) => {
     const tmp = { ...graphData };
@@ -112,6 +118,8 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
     stack: number[],
     result: ITransitionFrame[]
   ) => {
+    const SCCs = [];
+
     order[node.id] = id[0];
     low[node.id] = id[0]++;
     vis[node.id] = true;
@@ -138,7 +146,7 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
           toColor: edge.color!,
         });
 
-        tarjan(
+        const sccs: number[][] = tarjan(
           gData,
           gData.nodes[j],
           adjList,
@@ -150,16 +158,27 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
           stack,
           result
         );
+
+        if (sccs.length > 0) {
+          sccs.forEach((each) => {
+            if (each.length > 0) {
+              SCCs.push(each);
+            }
+          });
+        }
+
         low[node.id] = Math.min(low[node.id], low[j]);
       } else if (vis[j]) {
         low[node.id] = Math.min(low[node.id], low[j]);
       }
     }
 
+    const scc: number[] = [];
     if (low[node.id] === order[node.id]) {
       const color = genRandomColor();
       while (stack[stack.length - 1] !== node.id) {
         const i = stack.pop();
+        scc.push(i!);
         vis[i!] = false;
         result.push({
           x: gData.nodes[i!],
@@ -168,6 +187,7 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
         });
       }
 
+      scc.push(node.id);
       vis[stack.pop()!] = false;
       result.push({
         x: node,
@@ -175,6 +195,9 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
         toColor: color,
       });
     }
+
+    if (scc.length > 0) SCCs.push(scc);
+    return SCCs;
   };
 
   const resetGraph = () => {
@@ -187,15 +210,18 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
         changeEdgeColor(each, DEFAULT_EDGE_COLOR);
     });
     if (tab === Tabs.AllDifferent) {
-      const tmp = { ...tmpGraphData };
+      const tmp = { ...graphDataMaxMatching };
       const tmp2 = { ...graphData };
-      setTmpGraphData(tmp2);
+      const tmp3 = { ...graphDataEdgesRemoved };
+      setGraphDataMaxMatching(tmp3);
       setGraphData(tmp);
+      setGraphDataEdgesRemoved(tmp2);
       setIsDirected(false);
+      setIsDone(false);
     }
   };
 
-  const playNextTransition = (result: ITransitionFrame[], i: number) => {
+  const playNextTransition = async (result: ITransitionFrame[], i: number) => {
     if (Array.isArray(result[i].x)) {
       for (let j = 0; j < result[i].x.length; j++) {
         const tmp = result[i].x as IEdge[] | INode[];
@@ -216,7 +242,7 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
     setTransitionFramesIdx(i + 1);
   };
 
-  const playPrevTransition = (result: ITransitionFrame[], i: number) => {
+  const playPrevTransition = async (result: ITransitionFrame[], i: number) => {
     i--;
 
     if ('id' in result[i].x) {
@@ -240,7 +266,6 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
   };
 
   const runTarjan = (gData: IGraphData, adjList: number[][]) => {
-    setTmpGraphData(gData);
     const MAX = 2e9 + 7;
     const id = [0];
 
@@ -252,9 +277,10 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
     const stack: number[] = [];
     const result: ITransitionFrame[] = [];
 
+    const SCCs: number[][] = [];
     for (let i = 0; i < adjList.length; i++) {
       if (order[gData.nodes[i].id] === -1) {
-        tarjan(
+        const sccs = tarjan(
           gData,
           gData.nodes[i],
           adjList,
@@ -266,10 +292,16 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
           stack,
           result
         );
+
+        if (sccs.length > 0) {
+          sccs.forEach((each: number[]) => SCCs.push(each));
+        }
       }
     }
 
     setTransitionFrames(result);
+
+    return SCCs;
   };
 
   const runHopcroftKarp = (gData: IGraphData, adjList: number[][]) => {
@@ -318,7 +350,38 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
       if (tmp) tmp.color = '#00aaff';
     });
 
-    runTarjan(newGData, newAdjList);
+    setGraphDataMaxMatching(newGData);
+    const SCCs = runTarjan(newGData, newAdjList);
+    const edgesToRemove: IEdge[] = [];
+
+    newGData.links.forEach((each) => {
+      const targetId = each.target;
+      const sourceId = each.source;
+
+      const i = SCCs.findIndex((each_) => each_.includes(targetId));
+
+      if (SCCs[i].findIndex((each_) => each_ === sourceId) === -1) {
+        if (
+          maxMatchingEdges.findIndex((each_) => each_.name === each.name) === -1
+        ) {
+          edgesToRemove.push(each);
+        }
+      }
+    });
+
+    // edgesToRemove.forEach((each) => {
+    //   const tmp = newGData.links.find((each_) => each_.name === each.name);
+    //   if (tmp) tmp.color = '#ff0000';
+    // });
+
+    const gDataEdgesRemoved = { ...newGData };
+    gDataEdgesRemoved.links = [];
+    newGData.links.forEach((each) => {
+      if (edgesToRemove.findIndex((each_) => each_.name === each.name) === -1)
+        gDataEdgesRemoved.links.push(each);
+    });
+
+    setGraphDataEdgesRemoved(gDataEdgesRemoved);
   };
 
   const hopcroftKarp = (U: number[], V: number[], adj: number[][]) => {
@@ -433,32 +496,53 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
         <div className='w-fit mx-auto'>
           <div className='w-full inline-block'>
             {tab === Tabs.AllDifferent && (
-              <Button
-                disabled={isDirected}
-                onClick={() => {
-                  setIsDirected(true);
-                  const tmp = { ...tmpGraphData };
-                  const tmp2 = { ...graphData };
-                  graphData.nodes.forEach((each, i) => {
-                    tmp.nodes[i].x = each.x;
-                    tmp.nodes[i].y = each.y;
-                  });
+              <>
+                <Button
+                  disabled={
+                    (isDirected &&
+                      transitionFramesIdx !== transitionFrames.length) ||
+                    isDone
+                  }
+                  onClick={() => {
+                    if (!isDirected) {
+                      setIsDirected(true);
+                      const tmp = { ...graphDataMaxMatching };
+                      const tmp2 = { ...graphData };
+                      graphData.nodes.forEach((each, i) => {
+                        tmp.nodes[i].x = each.x;
+                        tmp.nodes[i].y = each.y;
+                      });
 
-                  setGraphData(tmp);
-                  setTmpGraphData(tmp2);
-                }}>
-                Find max matching
-              </Button>
+                      setGraphData(tmp);
+                      setGraphDataMaxMatching(tmp2);
+                    } else {
+                      const tmp = { ...graphDataEdgesRemoved };
+                      const tmp2 = { ...graphData };
+                      graphData.nodes.forEach((each, i) => {
+                        tmp.nodes[i].x = each.x;
+                        tmp.nodes[i].y = each.y;
+                      });
+
+                      setGraphData(tmp);
+                      setGraphDataEdgesRemoved(tmp2);
+                      setIsDone(true);
+                    }
+                  }}>
+                  {!isDirected ? 'Find max matching' : 'Remove redundant edges'}
+                </Button>
+              </>
             )}
             <Button
               disabled={
                 (tab === Tabs.AllDifferent && !isDirected) ||
                 isRunning === RunStatus.Running ||
-                transitionFramesIdx === 0
+                transitionFramesIdx === 0 ||
+                isDone
               }
-              onClick={() => {
-                playPrevTransition(transitionFrames, transitionFramesIdx);
-                if (0 === transitionFramesIdx) {
+              onClick={async () => {
+                await playPrevTransition(transitionFrames, transitionFramesIdx);
+
+                if (1 === transitionFramesIdx) {
                   setIsRunning(RunStatus.Incomplete);
                 }
               }}>
@@ -475,7 +559,7 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
                 await delay(250);
                 await playTransitionToEnd(
                   transitionFrames,
-                  250,
+                  100,
                   transitionFramesIdx
                 );
                 setIsRunning(RunStatus.Complete);
@@ -489,9 +573,10 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
                 isRunning === RunStatus.Running ||
                 transitionFramesIdx === transitionFrames.length
               }
-              onClick={() => {
-                playNextTransition(transitionFrames, transitionFramesIdx);
-                if (transitionFramesIdx === transitionFrames.length) {
+              onClick={async () => {
+                await playNextTransition(transitionFrames, transitionFramesIdx);
+
+                if (transitionFramesIdx === transitionFrames.length - 1) {
                   setIsRunning(RunStatus.Complete);
                 }
               }}>

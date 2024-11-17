@@ -28,7 +28,7 @@ const Bigraph = ({
 
       (async () => {
         const gData = await genGraphFromJSON(
-          './src/example/example4.json',
+          './src/example/example5.json',
           GraphType.Bipartite
         );
         tarjanCallback(gData);
