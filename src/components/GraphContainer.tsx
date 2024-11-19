@@ -1,5 +1,6 @@
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 import { ForceGraphMethods, LinkObject } from 'react-force-graph-2d';
+
 import {
   delay,
   genRandomColor,
@@ -10,7 +11,6 @@ import {
   getFirstRightNodeName,
   getGraphObjFromIGraphData,
 } from '../utils';
-
 import Button from './Button';
 import { Tabs } from '../App';
 import Graph from './Graph';
@@ -87,8 +87,9 @@ const GraphContainer = ({ tab, setHighlightLines }: GraphContainerProps) => {
     []
   );
   const [transitionFramesIdx, setTransitionFramesIdx] = useState(0);
-  const [isDirected, setIsDirected] = useState(false);
-  const [isDone, setIsDone] = useState(false);
+  const [isGraphDirected, setIsGraphDirected] = useState(false);
+  const [isAnimationDone, setIsAnimationDone] = useState(false);
+  const [animationSpeed, setAnimationSpeed] = useState(5);
 
   const changeEdgeColor = (edge: IEdge, color: string) => {
     const tmp = { ...graphData };
@@ -302,8 +303,8 @@ const GraphContainer = ({ tab, setHighlightLines }: GraphContainerProps) => {
       setGraphDataMaxMatching(tmp3);
       setGraphData(tmp);
       setGraphDataEdgesRemoved(tmp2);
-      setIsDirected(false);
-      setIsDone(false);
+      setIsGraphDirected(false);
+      setIsAnimationDone(false);
     }
   };
 
@@ -575,12 +576,12 @@ const GraphContainer = ({ tab, setHighlightLines }: GraphContainerProps) => {
               >
             }
             tarjanCallback={(gData) => {
-              setIsDirected(false);
+              setIsGraphDirected(false);
               const adjList = makeAdjList(gData);
               runHopcroftKarp(gData, adjList);
               setGraphData(gData);
             }}
-            isDirected={isDirected}
+            isDirected={isGraphDirected}
           />
         )}
       </div>
@@ -591,13 +592,13 @@ const GraphContainer = ({ tab, setHighlightLines }: GraphContainerProps) => {
               <>
                 <Button
                   disabled={
-                    (isDirected &&
+                    (isGraphDirected &&
                       transitionFramesIdx !== transitionFrames.length) ||
-                    isDone
+                    isAnimationDone
                   }
                   onClick={() => {
-                    if (!isDirected) {
-                      setIsDirected(true);
+                    if (!isGraphDirected) {
+                      setIsGraphDirected(true);
                       const tmp = { ...graphDataMaxMatching };
                       const tmp2 = { ...graphData };
                       graphData.nodes.forEach((each, i) => {
@@ -617,19 +618,21 @@ const GraphContainer = ({ tab, setHighlightLines }: GraphContainerProps) => {
 
                       setGraphData(tmp);
                       setGraphDataEdgesRemoved(tmp2);
-                      setIsDone(true);
+                      setIsAnimationDone(true);
                     }
                   }}>
-                  {!isDirected ? 'Find max matching' : 'Remove redundant edges'}
+                  {!isGraphDirected
+                    ? 'Find max matching'
+                    : 'Remove redundant edges'}
                 </Button>
               </>
             )}
             <Button
               disabled={
-                (tab === Tabs.AllDifferent && !isDirected) ||
+                (tab === Tabs.AllDifferent && !isGraphDirected) ||
                 isRunning === RunStatus.Running ||
                 transitionFramesIdx === 0 ||
-                isDone
+                isAnimationDone
               }
               onClick={async () => {
                 await playPrevTransition(transitionFrames, transitionFramesIdx);
@@ -642,7 +645,7 @@ const GraphContainer = ({ tab, setHighlightLines }: GraphContainerProps) => {
             </Button>
             <Button
               disabled={
-                (tab === Tabs.AllDifferent && !isDirected) ||
+                (tab === Tabs.AllDifferent && !isGraphDirected) ||
                 isRunning === RunStatus.Running ||
                 transitionFramesIdx === transitionFrames.length
               }
@@ -651,7 +654,7 @@ const GraphContainer = ({ tab, setHighlightLines }: GraphContainerProps) => {
                 await delay(250);
                 await playTransitionToEnd(
                   transitionFrames,
-                  250,
+                  1000 / animationSpeed,
                   transitionFramesIdx
                 );
                 setIsRunning(RunStatus.Complete);
@@ -661,7 +664,7 @@ const GraphContainer = ({ tab, setHighlightLines }: GraphContainerProps) => {
             </Button>
             <Button
               disabled={
-                (tab === Tabs.AllDifferent && !isDirected) ||
+                (tab === Tabs.AllDifferent && !isGraphDirected) ||
                 isRunning === RunStatus.Running ||
                 transitionFramesIdx === transitionFrames.length
               }
@@ -676,7 +679,7 @@ const GraphContainer = ({ tab, setHighlightLines }: GraphContainerProps) => {
             </Button>
           </div>
         </div>
-        <div className='w-fit mx-auto'>
+        <div className='w-fit mx-auto flex flex-row items-center '>
           <Button
             disabled={isRunning === RunStatus.Running}
             onClick={() => {
@@ -685,6 +688,17 @@ const GraphContainer = ({ tab, setHighlightLines }: GraphContainerProps) => {
             }}>
             Reset
           </Button>
+          <div className='ml-4'>
+            <p className='text-[#ccc]'>Animation Speed</p>
+            <input
+              className=' accent-[#ccc] '
+              type='range'
+              min='1'
+              max='10'
+              value={animationSpeed}
+              onChange={(val) => setAnimationSpeed(parseInt(val.target.value))}
+            />
+          </div>
         </div>
       </div>
     </div>

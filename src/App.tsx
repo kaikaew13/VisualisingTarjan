@@ -18,6 +18,7 @@ function App() {
         <h1 className='mx-6 mt-3 h-full text-3xl font-bold text-white'>
           Visualise Tarjan (WIP)
         </h1>
+
         <div className='mx-auto mt-3'>
           <Button
             onClick={() => {
@@ -34,6 +35,11 @@ function App() {
             }}
             focus={tab === Tabs.AllDifferent}>
             All Different
+          </Button>
+        </div>
+        <div className='mt-3 mx-6'>
+          <Button disabled={false} onClick={() => {}}>
+            Import file
           </Button>
         </div>
       </div>
