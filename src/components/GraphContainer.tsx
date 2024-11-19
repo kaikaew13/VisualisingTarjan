@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 import { ForceGraphMethods, LinkObject } from 'react-force-graph-2d';
 import {
   delay,
@@ -15,6 +15,7 @@ import Button from './Button';
 import { Tabs } from '../App';
 import Graph from './Graph';
 import Bigraph from './Bigraph';
+import { highlightCodeLines } from './Pseudocode';
 
 enum RunStatus {
   Incomplete,
@@ -27,19 +28,16 @@ export enum GraphType {
   Bipartite,
 }
 
-interface GraphContainerProps {
-  tab: Tabs;
-}
-
 export const DEFAULT_NODE_COLOR = '#333333';
 export const DISCOVERED_NODE_COLOR = '#888888';
 export const DEFAULT_EDGE_COLOR = '#ccc';
 export const HIGHLIGHTED_EDGE_COLOR = '#00ff00';
 
 export interface ITransitionFrame {
-  x: INode | IEdge | INode[] | IEdge[];
+  x: INode | IEdge | null;
   fromColor: string;
   toColor: string;
+  code: string;
 }
 
 export interface IGraphData {
@@ -63,7 +61,12 @@ export interface INode {
   [key: string]: any;
 }
 
-const GraphContainer = ({ tab }: GraphContainerProps) => {
+interface GraphContainerProps {
+  tab: Tabs;
+  setHighlightLines: Dispatch<SetStateAction<string>>;
+}
+
+const GraphContainer = ({ tab, setHighlightLines }: GraphContainerProps) => {
   const fgRef = useRef<ForceGraphMethods<any, LinkObject<any, IEdge>>>();
 
   const [isRunning, setIsRunning] = useState(RunStatus.Incomplete);
@@ -101,7 +104,13 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
 
   const changeNodeColor = (node: INode, color: string) => {
     const tmp = { ...graphData };
-    tmp.nodes[node.id].color = color;
+    if (color === 'focus') {
+      tmp.nodes[node.id].val = 2;
+    } else if (color === 'unfocus') {
+      tmp.nodes[node.id].val = 1;
+    } else {
+      tmp.nodes[node.id].color = color;
+    }
     setGraphData(tmp);
     // node.color = color;
   };
@@ -118,32 +127,49 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
     stack: number[],
     result: ITransitionFrame[]
   ) => {
+    result.push({
+      x: node,
+      fromColor: node.color!,
+      toColor: DISCOVERED_NODE_COLOR,
+      code: highlightCodeLines.tarjaninit,
+    });
+    result.push({
+      x: node,
+      fromColor: 'unfocus',
+      toColor: 'focus',
+      code: highlightCodeLines.tarjaninit,
+    });
+
     const SCCs = [];
 
     order[node.id] = id[0];
     low[node.id] = id[0]++;
     vis[node.id] = true;
     stack.push(node.id);
-    result.push({
-      x: node,
-      fromColor: node.color!,
-      toColor: DISCOVERED_NODE_COLOR,
-    });
+
     for (let i = 0; i < adjList[node.id].length; i++) {
       const j = adjList[node.id][i];
 
+      let edge = edgeDict[node.id][j];
       if (order[j] === -1) {
-        let edge = edgeDict[node.id][j];
-
         result.push({
           x: edge,
           fromColor: edge.color!,
           toColor: HIGHLIGHTED_EDGE_COLOR,
+          code: highlightCodeLines.neighborif,
         });
+        // result.push({
+        //   x: edge,
+        //   fromColor: HIGHLIGHTED_EDGE_COLOR,
+        //   toColor: edge.color!,
+        //   code: highlightCodeLines.neighborif,
+        // });
+
         result.push({
-          x: edge,
-          fromColor: HIGHLIGHTED_EDGE_COLOR,
-          toColor: edge.color!,
+          x: node,
+          fromColor: 'focus',
+          toColor: 'unfocus',
+          code: highlightCodeLines.neighborif,
         });
 
         const sccs: number[][] = tarjan(
@@ -167,8 +193,34 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
           });
         }
 
+        if (!vis[j]) {
+          result.push({
+            x: edge,
+            fromColor: HIGHLIGHTED_EDGE_COLOR,
+            toColor: edge.color!,
+            code: highlightCodeLines.neighborafterif,
+          });
+        }
         low[node.id] = Math.min(low[node.id], low[j]);
+        result.push({
+          x: node,
+          fromColor: 'unfocus',
+          toColor: 'focus',
+          code: highlightCodeLines.neighborafterif,
+        });
       } else if (vis[j]) {
+        result.push({
+          x: edge,
+          fromColor: edge.color!,
+          toColor: HIGHLIGHTED_EDGE_COLOR,
+          code: highlightCodeLines.neighborelse,
+        });
+        // result.push({
+        //   x: edge,
+        //   fromColor: CYCLED_EDGE_COLOR,
+        //   toColor: edge.color!,
+        //   code: highlightCodeLines.neighborelse,
+        // });
         low[node.id] = Math.min(low[node.id], low[j]);
       }
     }
@@ -176,6 +228,12 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
     const scc: number[] = [];
     if (low[node.id] === order[node.id]) {
       const color = genRandomColor();
+      result.push({
+        x: null,
+        fromColor: '',
+        toColor: '',
+        code: highlightCodeLines.sccif,
+      });
       while (stack[stack.length - 1] !== node.id) {
         const i = stack.pop();
         scc.push(i!);
@@ -184,6 +242,7 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
           x: gData.nodes[i!],
           fromColor: DISCOVERED_NODE_COLOR,
           toColor: color,
+          code: highlightCodeLines.sccwhile,
         });
       }
 
@@ -193,18 +252,45 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
         x: node,
         fromColor: DISCOVERED_NODE_COLOR,
         toColor: color,
+        code: highlightCodeLines.sccend,
       });
     }
 
     if (scc.length > 0) SCCs.push(scc);
+
+    // if (edge) {
+    //   result.push({
+    //     x: edge,
+    //     fromColor: HIGHLIGHTED_EDGE_COLOR,
+    //     toColor: edge.color!,
+    //     code: highlightCodeLines.sccnoif,
+    //   });
+    // } else {
+
+    result.push({
+      x: node,
+      fromColor: 'focus',
+      toColor: 'unfocus',
+      code: highlightCodeLines.return,
+    });
+    result.push({
+      x: null,
+      fromColor: '',
+      toColor: '',
+      code: highlightCodeLines.return,
+    });
+    // }
+
     return SCCs;
   };
 
   const resetGraph = () => {
+    setHighlightLines('');
     setTransitionFramesIdx(0);
-    graphData.nodes.forEach((each) =>
-      changeNodeColor(each, DEFAULT_NODE_COLOR)
-    );
+    graphData.nodes.forEach((each) => {
+      changeNodeColor(each, DEFAULT_NODE_COLOR);
+      changeNodeColor(each, 'unfocus');
+    });
     graphData.links.forEach((each) => {
       if (each.color === HIGHLIGHTED_EDGE_COLOR)
         changeEdgeColor(each, DEFAULT_EDGE_COLOR);
@@ -222,22 +308,15 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
   };
 
   const playNextTransition = async (result: ITransitionFrame[], i: number) => {
-    if (Array.isArray(result[i].x)) {
-      for (let j = 0; j < result[i].x.length; j++) {
-        const tmp = result[i].x as IEdge[] | INode[];
-        if ('id' in tmp[j]) {
-          changeNodeColor(tmp[j] as INode, result[i].toColor);
-        } else {
-          changeEdgeColor(tmp[j] as IEdge, result[i].toColor);
-        }
-      }
-    } else {
-      if ('id' in result[i].x) {
+    if (result[i].x) {
+      if ('id' in result[i].x!) {
         changeNodeColor(result[i].x as INode, result[i].toColor);
       } else {
         changeEdgeColor(result[i].x as IEdge, result[i].toColor);
       }
     }
+
+    setHighlightLines(result[i].code);
 
     setTransitionFramesIdx(i + 1);
   };
@@ -245,11 +324,15 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
   const playPrevTransition = async (result: ITransitionFrame[], i: number) => {
     i--;
 
-    if ('id' in result[i].x) {
-      changeNodeColor(result[i].x as INode, result[i].fromColor);
-    } else {
-      changeEdgeColor(result[i].x as IEdge, result[i].fromColor);
+    if (result[i].x) {
+      if ('id' in result[i].x!) {
+        changeNodeColor(result[i].x as INode, result[i].fromColor);
+      } else {
+        changeEdgeColor(result[i].x as IEdge, result[i].fromColor);
+      }
     }
+
+    setHighlightLines(result[i].code);
 
     setTransitionFramesIdx(i);
   };
@@ -280,6 +363,12 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
     const SCCs: number[][] = [];
     for (let i = 0; i < adjList.length; i++) {
       if (order[gData.nodes[i].id] === -1) {
+        result.push({
+          x: gData.nodes[i],
+          fromColor: gData.nodes[i].color!,
+          toColor: DISCOVERED_NODE_COLOR,
+          code: highlightCodeLines.mainloop,
+        });
         const sccs = tarjan(
           gData,
           gData.nodes[i],
@@ -454,10 +543,13 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
       nodes: [],
       links: [],
     });
+    setTransitionFramesIdx(0);
+    setTransitionFrames([]);
+    setHighlightLines('');
   }, [tab]);
 
   return (
-    <div className=''>
+    <div className='pr-4'>
       <h3 className='text-white text-xl mb-3'>Visualisation</h3>
       <div>
         {tab === Tabs.SCC ? (
@@ -559,7 +651,7 @@ const GraphContainer = ({ tab }: GraphContainerProps) => {
                 await delay(250);
                 await playTransitionToEnd(
                   transitionFrames,
-                  100,
+                  250,
                   transitionFramesIdx
                 );
                 setIsRunning(RunStatus.Complete);

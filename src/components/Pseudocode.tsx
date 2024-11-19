@@ -1,77 +1,61 @@
 import { CodeBlock, dracula, monokai, monokaiSublime } from 'react-code-blocks';
 import Button from './Button';
-import { useState } from 'react';
-import { delay } from '../utils';
+import { Dispatch, SetStateAction, useEffect } from 'react';
 
-const PSEUDOCODE = `algorithm tarjan is
-    for (let i = 0; i < adjList.length; i++) {
-      if (order[gData.nodes[i].id] === -1) {
-        tarjan();
-      }
-    }
+export const highlightCodeLines = {
+  mainloop: '1-3',
+  tarjaninit: '5-9,11',
+  neighborloop: '11',
+  neighborif: '12-13',
+  neighborafterif: '14',
+  neighborelse: '15-16',
+  sccif: '18-19',
+  sccnoif: '18',
+  sccwhile: '20-23',
+  sccend: '24-26',
+  return: '27',
+};
+
+const PSEUDOCODE = `for each vertex v:
+    if v.index is undefined:
+        tarjan(v)
    
-    function strongconnect(v)
-        order[node.id] = id[0];
-        low[node.id] = id[0]++;
-        vis[node.id] = true;
-        stack.push(node.id);
-        result.push({
-        x: node,
-        fromColor: DEFAULT_NODE_COLOR,
-        toColor: DISCOVERED_NODE_COLOR,
-        });
-        for (let i = 0; i < adjList[node.id].length; i++) {
-        const j = adjList[node.id][i];
+function tarjan(v):
+    v.index = v.lowlink = index
+    index++
+    stack.push(v)
+    onStack[v] = true
 
-        if (order[j] === -1) {
-            result.push({
-            x: edgeDict[node.id][j],
-            fromColor: DEFAULT_EDGE_COLOR,
-            toColor: HIGHLIGHTED_EDGE_COLOR,
-            });
-            result.push({
-            x: edgeDict[node.id][j],
-            fromColor: HIGHLIGHTED_EDGE_COLOR,
-            toColor: DEFAULT_EDGE_COLOR,
-            });
-            tarjan();
-            low[node.id] = Math.min(low[node.id], low[j]);
-        } else if (vis[j]) {
-            low[node.id] = Math.min(low[node.id], low[j]);
-        }
-        }
+    for each neighbor w of v:
+        if w.index is undefined:
+            tarjan(w)
+            v.lowlink = min(v.lowlink, w.lowlink)
+        else if w not in SCC:
+            v.lowlink = min(v.lowlink, w.lowlink)
+  
+    if v.index == v.lowlink:
+        SCC = []
+        while stack.top != v:
+            w = stack.pop()
+            onStack[w] = false
+            SCC.add(w)
+        w = stack.pop()
+        onStack[w] = false
+        SCC.add(w)
+    return
+  
+  
+  `;
 
-        if (low[node.id] === order[node.id]) {
-        const color = genRandomColor();
-        while (stack[stack.length - 1] != node.id) {
-            const i = stack.pop();
-            vis[i!] = false;
-            result.push({
-            x: gData.nodes[i!],
-            fromColor: DISCOVERED_NODE_COLOR,
-            toColor: color,
-            });
-        }
+export const LAST_LINE_NO = 27;
 
-        vis[stack.pop()!] = false;
-        result.push({
-            x: node,
-            fromColor: DISCOVERED_NODE_COLOR,
-            toColor: color,
-        });
-    }`;
+interface PseudocodeProps {
+  highlightLines: string;
+  setHighlightLines: Dispatch<SetStateAction<string>>;
+}
 
-const LAST_LINE_NO = 39;
-
-const Pseudocode = () => {
-  const [highlightLine, setHighlightLine] = useState(0);
-
-  const highlightCodeToEnd = async () => {
-    for (let i = 1; i <= LAST_LINE_NO; i++) {
-      setHighlightLine(i);
-      await delay(250);
-    }
-  };
+const Pseudocode = ({ highlightLines }: PseudocodeProps) => {
+  useEffect(() => {}, [highlightLines]);
   return (
     <div className='w-[35%] h-full px-4 pb-4 text-xs flex flex-col '>
       <h3 className='text-white text-xl mb-3'>Pseudocode</h3>
@@ -80,13 +64,12 @@ const Pseudocode = () => {
         language='jsx'
         showLineNumbers
         theme={monokaiSublime}
-        highlight={highlightLine.toString()}
+        highlight={highlightLines}
         customStyle={{
           overflowY: 'scroll',
           height: '100%',
         }}
       />
-      <Button onClick={highlightCodeToEnd}>Test</Button>
     </div>
   );
 };

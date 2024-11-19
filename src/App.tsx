@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import Button from './components/Button';
-import Graph from './components/GraphContainer';
-import Pseudocode from './components/Pseudocode';
+import GraphContainer from './components/GraphContainer';
+import Pseudocode, { LAST_LINE_NO } from './components/Pseudocode';
 
 export enum Tabs {
   SCC,
@@ -10,6 +10,7 @@ export enum Tabs {
 
 function App() {
   const [tab, setTab] = useState(Tabs.SCC);
+  const [highlightLines, setHighlightLines] = useState('');
 
   return (
     <div className='w-full h-screen flex flex-col bg-[#111111]'>
@@ -37,8 +38,11 @@ function App() {
         </div>
       </div>
       <div className='h-full mt-3 flex flex-row overflow-y-auto'>
-        <Pseudocode />
-        <Graph tab={tab} />
+        <Pseudocode
+          highlightLines={highlightLines}
+          setHighlightLines={setHighlightLines}
+        />
+        <GraphContainer tab={tab} setHighlightLines={setHighlightLines} />
       </div>
     </div>
   );

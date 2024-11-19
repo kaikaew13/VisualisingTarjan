@@ -38,12 +38,10 @@ export const genGraphFromObject = (
   const links: IEdge[] = [];
   let x = -50;
   let y = 0;
-  let switchsides = false;
   for (const id in graph) {
     if (graph[id].name === firstRightNodeName) {
       y = 0;
       x = 50;
-      switchsides = true;
     }
 
     nodes.push({

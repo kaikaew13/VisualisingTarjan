@@ -3,7 +3,6 @@ import ForceGraph2D, {
   ForceGraphMethods,
   LinkObject,
 } from 'react-force-graph-2d';
-import * as d3Force from 'd3-force';
 
 import { GraphType, IEdge, IGraphData } from './GraphContainer';
 import { delay, genGraphFromJSON } from '../utils';
