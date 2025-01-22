@@ -63,7 +63,7 @@ const Pseudocode = ({ highlightLines }: PseudocodeProps) => {
   useEffect(() => {}, [highlightLines]);
   return (
     <div className='h-full text-xs flex flex-col '>
-      <h3 className='text-twpink text-xl mb-3 font-poppins font-medium'>
+      <h3 className='text-twwhite text-xl mb-3 font-poppins font-medium'>
         Pseudocode
       </h3>
       <CodeBlock

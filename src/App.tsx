@@ -4,6 +4,7 @@ import GraphContainer from './components/GraphContainer';
 import Pseudocode, { LAST_LINE_NO } from './components/Pseudocode';
 
 import { gh } from './assets';
+import Result from './components/Result';
 
 export enum Tabs {
   SCC,
@@ -89,6 +90,7 @@ function App() {
           setHighlightLines={setHighlightLines}
           fileData={fileData}
         />
+        <Result />
       </div>
     </div>
   );

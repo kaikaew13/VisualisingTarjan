@@ -73,7 +73,7 @@ const GraphContainer = ({
   fileData,
 }: GraphContainerProps) => {
   const fgRef = useRef<ForceGraphMethods<any, LinkObject<any, IEdge>>>();
-
+  const isRunningRef = useRef(RunStatus.Incomplete);
   const [isRunning, setIsRunning] = useState(RunStatus.Incomplete);
   const [graphData, setGraphData] = useState<IGraphData>({
     nodes: [],
@@ -349,9 +349,17 @@ const GraphContainer = ({
     i: number
   ) => {
     for (let j = i; j < result.length; j++) {
+      if (isRunningRef.current === RunStatus.Incomplete) {
+        return;
+      }
+
       playNextTransition(result, j);
       await delay(ms);
     }
+
+    isRunningRef.current = RunStatus.Complete;
+    setIsRunning(RunStatus.Complete);
+    // setIsRunning({ status: RunStatus.Complete });
   };
 
   const runTarjan = (gData: IGraphData, adjList: number[][]) => {
@@ -555,8 +563,8 @@ const GraphContainer = ({
   }, [tab]);
 
   return (
-    <div className='pr-4 mx-4'>
-      <h3 className='text-twpink text-xl font-poppins font-medium mb-3'>
+    <div className='mx-4'>
+      <h3 className='text-twwhite text-xl font-poppins font-medium mb-3'>
         Visualisation
       </h3>
       <div>
@@ -663,7 +671,9 @@ const GraphContainer = ({
                   );
 
                   if (1 === transitionFramesIdx) {
+                    isRunningRef.current = RunStatus.Incomplete;
                     setIsRunning(RunStatus.Incomplete);
+                    // setIsRunning({ status: RunStatus.Incomplete });
                   }
                 }}>
                 Prev
@@ -673,21 +683,41 @@ const GraphContainer = ({
               <Button
                 disabled={
                   (tab === Tabs.AllDifferent && !isGraphDirected) ||
-                  isRunning === RunStatus.Running ||
+                  // isRunning === RunStatus.Running ||
                   transitionFramesIdx === transitionFrames.length
                 }
                 onClick={async () => {
-                  setIsRunning(RunStatus.Running);
-                  await delay(250);
-                  await playTransitionToEnd(
-                    transitionFrames,
-                    1000 / animationSpeed,
-                    transitionFramesIdx
-                  );
-                  setIsRunning(RunStatus.Complete);
-                  await delay(250);
+                  if (isRunningRef.current === RunStatus.Running) {
+                    isRunningRef.current = RunStatus.Incomplete;
+                    setIsRunning(RunStatus.Incomplete);
+                  } else {
+                    isRunningRef.current = RunStatus.Running;
+                    setIsRunning(RunStatus.Running);
+                    playTransitionToEnd(
+                      transitionFrames,
+                      1000 / animationSpeed,
+                      transitionFramesIdx
+                    );
+                  }
+
+                  // if (isRunning.current === RunStatus.Running) {
+                  //   isRunning.current = RunStatus.Incomplete;
+                  //   // setIsRunning({ status: RunStatus.Incomplete });
+                  //   await delay(250);
+                  // } else {
+                  //   isRunning.current = RunStatus.Running;
+                  //   // setIsRunning({ status: RunStatus.Running });
+                  //   await delay(250);
+                  //   // playTransitionToEnd(
+                  //   //   transitionFrames,
+                  //   //   1000 / animationSpeed,
+                  //   //   transitionFramesIdx
+                  //   // );
+                  //   // setIsRunning(RunStatus.Complete);
+                  //   // await delay(250);
+                  // }
                 }}>
-                Run
+                {isRunning === RunStatus.Running ? 'Stop' : 'Run'}
               </Button>
             </span>
             <Button
@@ -700,7 +730,9 @@ const GraphContainer = ({
                 await playNextTransition(transitionFrames, transitionFramesIdx);
 
                 if (transitionFramesIdx === transitionFrames.length - 1) {
+                  isRunningRef.current = RunStatus.Complete;
                   setIsRunning(RunStatus.Complete);
+                  // setIsRunning({ status: RunStatus.Complete });
                 }
               }}>
               Next
@@ -712,7 +744,9 @@ const GraphContainer = ({
             disabled={isRunning === RunStatus.Running}
             onClick={() => {
               resetGraph();
+              isRunningRef.current = RunStatus.Incomplete;
               setIsRunning(RunStatus.Incomplete);
+              // setIsRunning({ status: RunStatus.Incomplete });
             }}>
             Reset
           </Button>
@@ -721,7 +755,8 @@ const GraphContainer = ({
               Animation Speed
             </p>
             <input
-              className=' accent-twwhite '
+              disabled={isRunning === RunStatus.Running}
+              className=' accent-twpink'
               type='range'
               min='1'
               max='10'
