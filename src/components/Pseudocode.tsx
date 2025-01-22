@@ -1,4 +1,10 @@
-import { CodeBlock, dracula, monokai, monokaiSublime } from 'react-code-blocks';
+import {
+  CodeBlock,
+  dracula,
+  monokai,
+  monokaiSublime,
+  github,
+} from 'react-code-blocks';
 import Button from './Button';
 import { Dispatch, SetStateAction, useEffect } from 'react';
 
@@ -63,11 +69,12 @@ const Pseudocode = ({ highlightLines }: PseudocodeProps) => {
         text={PSEUDOCODE}
         language='jsx'
         showLineNumbers
-        theme={monokaiSublime}
+        theme={dracula}
         highlight={highlightLines}
         customStyle={{
           overflowY: 'scroll',
           height: '100%',
+          backgroundColor: '#0E0D11',
         }}
       />
     </div>

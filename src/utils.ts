@@ -73,10 +73,10 @@ export const genGraphFromObject = (
 };
 
 export const genGraphFromJSON = async (
-  filename: string,
+  fileData: string,
   graphType: GraphType
 ) => {
-  const graph = await (await fetch(filename)).json();
+  const graph = JSON.parse(fileData);
   return genGraphFromObject(graph, graphType, getFirstRightNodeName(graph));
 };
 

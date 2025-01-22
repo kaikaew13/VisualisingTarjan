@@ -64,9 +64,14 @@ export interface INode {
 interface GraphContainerProps {
   tab: Tabs;
   setHighlightLines: Dispatch<SetStateAction<string>>;
+  fileData: string;
 }
 
-const GraphContainer = ({ tab, setHighlightLines }: GraphContainerProps) => {
+const GraphContainer = ({
+  tab,
+  setHighlightLines,
+  fileData,
+}: GraphContainerProps) => {
   const fgRef = useRef<ForceGraphMethods<any, LinkObject<any, IEdge>>>();
 
   const [isRunning, setIsRunning] = useState(RunStatus.Incomplete);
@@ -553,7 +558,11 @@ const GraphContainer = ({ tab, setHighlightLines }: GraphContainerProps) => {
     <div className='pr-4'>
       <h3 className='text-white text-xl mb-3'>Visualisation</h3>
       <div>
-        {tab === Tabs.SCC ? (
+        {fileData === '' ? (
+          <>
+            <h3 className='text-white text-xl mb-3'>No file</h3>
+          </>
+        ) : tab === Tabs.SCC ? (
           <Graph
             graphData={graphData}
             fgRef={
@@ -566,6 +575,7 @@ const GraphContainer = ({ tab, setHighlightLines }: GraphContainerProps) => {
               runTarjan(gData, adjList);
               setGraphData(gData);
             }}
+            fileData={fileData}
           />
         ) : (
           <Bigraph
@@ -582,6 +592,7 @@ const GraphContainer = ({ tab, setHighlightLines }: GraphContainerProps) => {
               setGraphData(gData);
             }}
             isDirected={isGraphDirected}
+            fileData={fileData}
           />
         )}
       </div>

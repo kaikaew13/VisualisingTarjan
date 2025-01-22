@@ -12,6 +12,7 @@ interface BigraphProps {
   fgRef: React.MutableRefObject<ForceGraphMethods<any, LinkObject<any, IEdge>>>;
   tarjanCallback: (gData: IGraphData) => void;
   isDirected: boolean;
+  fileData: string;
 }
 
 const Bigraph = ({
@@ -19,6 +20,7 @@ const Bigraph = ({
   fgRef,
   tarjanCallback,
   isDirected,
+  fileData,
 }: BigraphProps) => {
   useEffect(() => {
     if (graphData.links.length === 0) {
@@ -26,10 +28,7 @@ const Bigraph = ({
       // setGraphData(dummyGraph);
 
       (async () => {
-        const gData = await genGraphFromJSON(
-          './src/example/example5.json',
-          GraphType.Bipartite
-        );
+        const gData = await genGraphFromJSON(fileData, GraphType.Bipartite);
         tarjanCallback(gData);
         await delay(0);
       })();

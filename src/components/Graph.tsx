@@ -12,18 +12,16 @@ interface GraphProps {
   graphData: IGraphData;
   fgRef: React.MutableRefObject<ForceGraphMethods<any, LinkObject<any, IEdge>>>;
   tarjanCallback: (gData: IGraphData) => void;
+  fileData: string;
 }
 
-const Graph = ({ graphData, fgRef, tarjanCallback }: GraphProps) => {
+const Graph = ({ graphData, fgRef, tarjanCallback, fileData }: GraphProps) => {
   const [cooldownTime, setCooldownTime] = useState(1000);
 
   useEffect(() => {
     if (graphData.links.length === 0) {
       (async () => {
-        const gData = await genGraphFromJSON(
-          './src/example/example1.json',
-          GraphType.Regular
-        );
+        const gData = await genGraphFromJSON(fileData, GraphType.Regular);
         tarjanCallback(gData);
         // runTarjan(gData);
         // setGraphData(gData);
