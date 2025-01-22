@@ -3,6 +3,8 @@ import Button from './components/Button';
 import GraphContainer from './components/GraphContainer';
 import Pseudocode, { LAST_LINE_NO } from './components/Pseudocode';
 
+import { gh } from './assets';
+
 export enum Tabs {
   SCC,
   AllDifferent,
@@ -16,12 +18,12 @@ function App() {
   return (
     <div className='w-full h-screen flex flex-col bg-twblack'>
       <div className='flex justify-between'>
-        <h1 className='mx-4 mt-4 mr-24 h-full text-3xl font-semibold text-twwhite font-poppins'>
+        <h1 className='mx-4 mt-4 h-full text-3xl font-semibold text-twwhite font-poppins'>
           Tarjan <span className='text-twpink'>Visualiser</span>
         </h1>
 
         <div className=' mt-6'>
-          <span className='mr-16'>
+          <span className='mr-8'>
             <Button
               onClick={() => {
                 if (tab === Tabs.SCC) return;
@@ -44,7 +46,7 @@ function App() {
           </Button>
         </div>
 
-        <div className='mt-4 mx-4'>
+        <div className='mt-4 mx-4 ml-20 flex items-center'>
           <Button disabled={false} secondary onClick={() => {}}>
             <>
               <label htmlFor='file-upload' className='hover:cursor-pointer'>
@@ -68,6 +70,13 @@ function App() {
               />
             </>
           </Button>
+          <a
+            className='ml-8'
+            href='https://github.com/kaikaew13/VisualisingTarjan'
+            target='_blank'
+            rel='noopener noreferrer'>
+            <img src={gh} className='w-8 h-8' />
+          </a>
         </div>
       </div>
       <div className='h-full bg-twblack-secondary m-4 p-4 flex flex-row overflow-y-auto rounded-lg'>

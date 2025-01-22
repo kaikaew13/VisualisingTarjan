@@ -603,82 +603,93 @@ const GraphContainer = ({
         )}
       </div>
       <div className='w-full'>
-        <div className='w-fit mx-auto'>
+        <div className='w-fit mx-auto mt-4'>
           <div className='w-full inline-block'>
             {tab === Tabs.AllDifferent && (
               <>
-                <Button
-                  disabled={
-                    (isGraphDirected &&
-                      transitionFramesIdx !== transitionFrames.length) ||
-                    isAnimationDone
-                  }
-                  onClick={() => {
-                    if (!isGraphDirected) {
-                      setIsGraphDirected(true);
-                      const tmp = { ...graphDataMaxMatching };
-                      const tmp2 = { ...graphData };
-                      graphData.nodes.forEach((each, i) => {
-                        tmp.nodes[i].x = each.x;
-                        tmp.nodes[i].y = each.y;
-                      });
-
-                      setGraphData(tmp);
-                      setGraphDataMaxMatching(tmp2);
-                    } else {
-                      const tmp = { ...graphDataEdgesRemoved };
-                      const tmp2 = { ...graphData };
-                      graphData.nodes.forEach((each, i) => {
-                        tmp.nodes[i].x = each.x;
-                        tmp.nodes[i].y = each.y;
-                      });
-
-                      setGraphData(tmp);
-                      setGraphDataEdgesRemoved(tmp2);
-                      setIsAnimationDone(true);
+                <span className='mr-4'>
+                  <Button
+                    disabled={
+                      (isGraphDirected &&
+                        transitionFramesIdx !== transitionFrames.length) ||
+                      isAnimationDone ||
+                      fileData === ''
                     }
-                  }}>
-                  {!isGraphDirected
-                    ? 'Find max matching'
-                    : 'Remove redundant edges'}
-                </Button>
+                    onClick={() => {
+                      if (!isGraphDirected) {
+                        setIsGraphDirected(true);
+                        const tmp = { ...graphDataMaxMatching };
+                        const tmp2 = { ...graphData };
+                        graphData.nodes.forEach((each, i) => {
+                          tmp.nodes[i].x = each.x;
+                          tmp.nodes[i].y = each.y;
+                        });
+
+                        setGraphData(tmp);
+                        setGraphDataMaxMatching(tmp2);
+                      } else {
+                        const tmp = { ...graphDataEdgesRemoved };
+                        const tmp2 = { ...graphData };
+                        graphData.nodes.forEach((each, i) => {
+                          tmp.nodes[i].x = each.x;
+                          tmp.nodes[i].y = each.y;
+                        });
+
+                        setGraphData(tmp);
+                        setGraphDataEdgesRemoved(tmp2);
+                        setIsAnimationDone(true);
+                      }
+                    }}>
+                    {!isGraphDirected
+                      ? 'Find max matching'
+                      : 'Remove redundant edges'}
+                  </Button>
+                </span>
               </>
             )}
-            <Button
-              disabled={
-                (tab === Tabs.AllDifferent && !isGraphDirected) ||
-                isRunning === RunStatus.Running ||
-                transitionFramesIdx === 0 ||
-                isAnimationDone
-              }
-              onClick={async () => {
-                await playPrevTransition(transitionFrames, transitionFramesIdx);
 
-                if (1 === transitionFramesIdx) {
-                  setIsRunning(RunStatus.Incomplete);
+            <span className='mr-4'>
+              <Button
+                disabled={
+                  (tab === Tabs.AllDifferent && !isGraphDirected) ||
+                  isRunning === RunStatus.Running ||
+                  transitionFramesIdx === 0 ||
+                  isAnimationDone
                 }
-              }}>
-              Prev
-            </Button>
-            <Button
-              disabled={
-                (tab === Tabs.AllDifferent && !isGraphDirected) ||
-                isRunning === RunStatus.Running ||
-                transitionFramesIdx === transitionFrames.length
-              }
-              onClick={async () => {
-                setIsRunning(RunStatus.Running);
-                await delay(250);
-                await playTransitionToEnd(
-                  transitionFrames,
-                  1000 / animationSpeed,
-                  transitionFramesIdx
-                );
-                setIsRunning(RunStatus.Complete);
-                await delay(250);
-              }}>
-              Run
-            </Button>
+                onClick={async () => {
+                  await playPrevTransition(
+                    transitionFrames,
+                    transitionFramesIdx
+                  );
+
+                  if (1 === transitionFramesIdx) {
+                    setIsRunning(RunStatus.Incomplete);
+                  }
+                }}>
+                Prev
+              </Button>
+            </span>
+            <span className='mr-4'>
+              <Button
+                disabled={
+                  (tab === Tabs.AllDifferent && !isGraphDirected) ||
+                  isRunning === RunStatus.Running ||
+                  transitionFramesIdx === transitionFrames.length
+                }
+                onClick={async () => {
+                  setIsRunning(RunStatus.Running);
+                  await delay(250);
+                  await playTransitionToEnd(
+                    transitionFrames,
+                    1000 / animationSpeed,
+                    transitionFramesIdx
+                  );
+                  setIsRunning(RunStatus.Complete);
+                  await delay(250);
+                }}>
+                Run
+              </Button>
+            </span>
             <Button
               disabled={
                 (tab === Tabs.AllDifferent && !isGraphDirected) ||
@@ -696,7 +707,7 @@ const GraphContainer = ({
             </Button>
           </div>
         </div>
-        <div className='w-fit mx-auto flex flex-row items-center '>
+        <div className='w-fit mx-auto flex flex-row items-center mt-4'>
           <Button
             disabled={isRunning === RunStatus.Running}
             onClick={() => {
@@ -706,9 +717,11 @@ const GraphContainer = ({
             Reset
           </Button>
           <div className='ml-4'>
-            <p className='text-[#ccc]'>Animation Speed</p>
+            <p className='text-twwhite font-poppins font-medium text-sm'>
+              Animation Speed
+            </p>
             <input
-              className=' accent-[#ccc] '
+              className=' accent-twwhite '
               type='range'
               min='1'
               max='10'

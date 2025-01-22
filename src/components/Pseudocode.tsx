@@ -71,7 +71,7 @@ const Pseudocode = ({ highlightLines }: PseudocodeProps) => {
         language='jsx'
         showLineNumbers
         theme={dracula}
-        highlight={highlightLines}
+        // highlight={highlightLines}
         customStyle={{
           overflowY: 'scroll',
           height: '100%',

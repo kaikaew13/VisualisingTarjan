@@ -19,7 +19,7 @@ function Button({
     <button
       disabled={disabled}
       className={` 
-        ${focus && 'text-[#111111]'} py-2 px-4 bg-twwhite rounded-lg
+        py-2 px-4 bg-twwhite rounded-lg hover:bg-twblack hover:text-twwhite border hover:border-twwhite
        disabled:cursor-not-allowed disabled:text-twwhite-secondary text-twblack text-base font-poppins font-medium
       `}
       onClick={onClick}>
@@ -30,7 +30,7 @@ function Button({
     <button
       disabled={disabled}
       className={` 
-        ${focus && 'text-[#111111]'}
+        ${focus && 'underline'}
        disabled:cursor-not-allowed disabled:text-twwhite-secondary text-twwhite text-base font-poppins font-medium
       `}
       onClick={onClick}>
