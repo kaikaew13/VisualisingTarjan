@@ -28,10 +28,10 @@ export enum GraphType {
   Bipartite,
 }
 
-export const DEFAULT_NODE_COLOR = '#333333';
-export const DISCOVERED_NODE_COLOR = '#888888';
-export const DEFAULT_EDGE_COLOR = '#ccc';
-export const HIGHLIGHTED_EDGE_COLOR = '#00ff00';
+export const DEFAULT_NODE_COLOR = '#565167';
+export const DISCOVERED_NODE_COLOR = '#6272A4';
+export const DEFAULT_EDGE_COLOR = '#F8F8F2';
+export const HIGHLIGHTED_EDGE_COLOR = '#50FA7B';
 
 export interface ITransitionFrame {
   x: INode | IEdge | null;
@@ -442,7 +442,7 @@ const GraphContainer = ({
 
     maxMatchingEdges.forEach((each) => {
       const tmp = newGData.links.find((each_) => each_.name === each.name);
-      if (tmp) tmp.color = '#00aaff';
+      if (tmp) tmp.color = '#FF79C6';
     });
 
     setGraphDataMaxMatching(newGData);
@@ -555,12 +555,18 @@ const GraphContainer = ({
   }, [tab]);
 
   return (
-    <div className='pr-4'>
-      <h3 className='text-white text-xl mb-3'>Visualisation</h3>
+    <div className='pr-4 mx-4'>
+      <h3 className='text-twpink text-xl font-poppins font-medium mb-3'>
+        Visualisation
+      </h3>
       <div>
         {fileData === '' ? (
           <>
-            <h3 className='text-white text-xl mb-3'>No file</h3>
+            <div className='bg-twblack w-[720px] h-[500px] rounded-lg text-center flex items-center justify-center'>
+              <h3 className='text-3xl font-poppins font-semibold text-twwhite-secondary '>
+                No Data
+              </h3>
+            </div>
           </>
         ) : tab === Tabs.SCC ? (
           <Graph

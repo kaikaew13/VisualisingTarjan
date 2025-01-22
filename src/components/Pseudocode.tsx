@@ -50,7 +50,6 @@ function tarjan(v):
         SCC.add(w)
     return
   
-  
   `;
 
 export const LAST_LINE_NO = 27;
@@ -63,8 +62,10 @@ interface PseudocodeProps {
 const Pseudocode = ({ highlightLines }: PseudocodeProps) => {
   useEffect(() => {}, [highlightLines]);
   return (
-    <div className='w-[35%] h-full px-4 pb-4 text-xs flex flex-col '>
-      <h3 className='text-white text-xl mb-3'>Pseudocode</h3>
+    <div className='h-full text-xs flex flex-col '>
+      <h3 className='text-twpink text-xl mb-3 font-poppins font-medium'>
+        Pseudocode
+      </h3>
       <CodeBlock
         text={PSEUDOCODE}
         language='jsx'
@@ -75,6 +76,7 @@ const Pseudocode = ({ highlightLines }: PseudocodeProps) => {
           overflowY: 'scroll',
           height: '100%',
           backgroundColor: '#0E0D11',
+          borderRadius: '8px',
         }}
       />
     </div>

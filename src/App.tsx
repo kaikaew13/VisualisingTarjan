@@ -15,21 +15,24 @@ function App() {
 
   return (
     <div className='w-full h-screen flex flex-col bg-twblack'>
-      <div className='flex'>
-        <h1 className='mx-6 mt-6 h-full text-3xl font-semibold text-twwhite font-poppins'>
+      <div className='flex justify-between'>
+        <h1 className='mx-4 mt-4 mr-24 h-full text-3xl font-semibold text-twwhite font-poppins'>
           Tarjan <span className='text-twpink'>Visualiser</span>
         </h1>
 
-        <div className='mx-auto mt-3'>
-          <Button
-            onClick={() => {
-              if (tab === Tabs.SCC) return;
-              setTab(Tabs.SCC);
-              setFileData('');
-            }}
-            focus={tab === Tabs.SCC}>
-            SCC
-          </Button>
+        <div className=' mt-6'>
+          <span className='mr-16'>
+            <Button
+              onClick={() => {
+                if (tab === Tabs.SCC) return;
+                setTab(Tabs.SCC);
+                setFileData('');
+              }}
+              focus={tab === Tabs.SCC}>
+              Basic
+            </Button>
+          </span>
+
           <Button
             onClick={() => {
               if (tab === Tabs.AllDifferent) return;
@@ -37,14 +40,15 @@ function App() {
               setFileData('');
             }}
             focus={tab === Tabs.AllDifferent}>
-            All Different
+            All-Different
           </Button>
         </div>
-        <div className='mt-3 mx-6'>
-          <Button disabled={false} onClick={() => {}}>
+
+        <div className='mt-4 mx-4'>
+          <Button disabled={false} secondary onClick={() => {}}>
             <>
               <label htmlFor='file-upload' className='hover:cursor-pointer'>
-                Import file
+                Import File
               </label>
               <input
                 id='file-upload'
@@ -66,7 +70,7 @@ function App() {
           </Button>
         </div>
       </div>
-      <div className='h-full mt-3 flex flex-row overflow-y-auto'>
+      <div className='h-full bg-twblack-secondary m-4 p-4 flex flex-row overflow-y-auto rounded-lg'>
         <Pseudocode
           highlightLines={highlightLines}
           setHighlightLines={setHighlightLines}

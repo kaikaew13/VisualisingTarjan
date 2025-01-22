@@ -11,7 +11,10 @@ export default {
         },
         twwhite: {
           DEFAULT: '#F8F8F2',
+          secondary: '#565167',
+          tertiary: '#6272A4',
         },
+        twgreen: '#50FA7B',
       },
       fontFamily: {
         poppins: ['Poppins', 'sans-serif'],

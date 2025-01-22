@@ -5,6 +5,7 @@ interface ButtonProps {
   children: ReactNode;
   onClick: () => void;
   focus?: boolean;
+  secondary?: boolean;
 }
 
 function Button({
@@ -12,18 +13,26 @@ function Button({
   children,
   onClick,
   focus = false,
+  secondary = false,
 }: ButtonProps) {
-  return (
+  return secondary ? (
+    <button
+      disabled={disabled}
+      className={` 
+        ${focus && 'text-[#111111]'} py-2 px-4 bg-twwhite rounded-lg
+       disabled:cursor-not-allowed disabled:text-twwhite-secondary text-twblack text-base font-poppins font-medium
+      `}
+      onClick={onClick}>
+      {children}
+    </button>
+  ) : (
     // <div className='w-fit mx-auto my-2'>
     <button
       disabled={disabled}
       className={` 
-        ${
-          focus &&
-          'bg-[#888888] text-[#111111] hover:bg-[#aaaaaa] hover:border-[#aaaaaa]'
-        }
-      my-2 mx-auto p-2 border border-[#888888] disabled:cursor-not-allowed disabled:text-[#999999] text-[#ccc]
-      hover:bg-[#333333]`}
+        ${focus && 'text-[#111111]'}
+       disabled:cursor-not-allowed disabled:text-twwhite-secondary text-twwhite text-base font-poppins font-medium
+      `}
       onClick={onClick}>
       {children}
     </button>
