@@ -469,8 +469,6 @@ const GraphContainer = ({
       maxMatchingEdges.push(edgeDict[res.pairU[i]][i]);
     }
 
-    console.log(maxMatchingEdges);
-
     maxMatchingEdges.forEach((each) => {
       if (each) {
         const tmp = newGData.links.find((each_) => each_.name === each.name);
@@ -590,6 +588,10 @@ const GraphContainer = ({
       setHighlightLines('');
       setIsRunning(RunStatus.Incomplete);
       isRunningRef.current = RunStatus.Incomplete;
+    }
+
+    if (tab === Tabs.AllDifferent) {
+      setIsGraphDirected(false);
     }
   }, [fileData]);
 
