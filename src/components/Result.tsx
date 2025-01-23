@@ -19,7 +19,7 @@ function Result({ result, showResult }: ResultProps) {
           <img src={dots} alt='' className='h-[30px]' />
         </div>
       ) : (
-        <div className='w-full bg-twblack h-full rounded-lg flex flex-col p-3'>
+        <div className='w-full bg-twblack h-full rounded-lg flex flex-col p-3 overflow-y-auto'>
           {result.map((val, i) => (
             <div
               key={i}
