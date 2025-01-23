@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import Button from './components/Button';
 import GraphContainer from './components/GraphContainer';
-import Pseudocode, { LAST_LINE_NO } from './components/Pseudocode';
+import Pseudocode from './components/Pseudocode';
 
 import { gh } from './assets';
 import Result from './components/Result';
