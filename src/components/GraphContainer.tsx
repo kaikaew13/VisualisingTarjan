@@ -469,9 +469,13 @@ const GraphContainer = ({
       maxMatchingEdges.push(edgeDict[res.pairU[i]][i]);
     }
 
+    console.log(maxMatchingEdges);
+
     maxMatchingEdges.forEach((each) => {
-      const tmp = newGData.links.find((each_) => each_.name === each.name);
-      if (tmp) tmp.color = '#FF79C6';
+      if (each) {
+        const tmp = newGData.links.find((each_) => each_.name === each.name);
+        if (tmp) tmp.color = '#FF79C6';
+      }
     });
 
     setGraphDataMaxMatching(newGData);
@@ -486,7 +490,9 @@ const GraphContainer = ({
 
       if (SCCs[i].findIndex((each_) => each_ === sourceId) === -1) {
         if (
-          maxMatchingEdges.findIndex((each_) => each_.name === each.name) === -1
+          maxMatchingEdges.findIndex(
+            (each_) => each_ && each_.name === each.name
+          ) === -1
         ) {
           edgesToRemove.push(each);
         }
