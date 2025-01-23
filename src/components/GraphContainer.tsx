@@ -67,6 +67,8 @@ interface GraphContainerProps {
   setHighlightLines: Dispatch<SetStateAction<string>>;
   fileData: string;
   setFileData: Dispatch<SetStateAction<string>>;
+  setResult: React.Dispatch<React.SetStateAction<string[][]>>;
+  setShowResult: Dispatch<SetStateAction<boolean>>;
 }
 
 const GraphContainer = ({
@@ -74,6 +76,8 @@ const GraphContainer = ({
   setHighlightLines,
   fileData,
   setFileData,
+  setResult,
+  setShowResult,
 }: GraphContainerProps) => {
   const fgRef = useRef<ForceGraphMethods<any, LinkObject<any, IEdge>>>();
   const isRunningRef = useRef(RunStatus.Incomplete);
@@ -364,6 +368,7 @@ const GraphContainer = ({
 
     isRunningRef.current = RunStatus.Complete;
     setIsRunning(RunStatus.Complete);
+    setShowResult(true);
     // setIsRunning({ status: RunStatus.Complete });
   };
 
@@ -407,7 +412,18 @@ const GraphContainer = ({
       }
     }
 
+    // passing result to Result block
     setTransitionFrames(result);
+    const res: string[][] = [];
+    SCCs.forEach((each) => {
+      const tmp: string[] = [];
+      each.forEach((e) => {
+        tmp.push(gData.nodes[e].name!);
+      });
+      res.push(tmp);
+    });
+
+    setResult(res);
 
     return SCCs;
   };
@@ -558,8 +574,6 @@ const GraphContainer = ({
   };
 
   useEffect(() => {
-    console.log(fileData);
-
     if (fileData === '') {
       setGraphData({
         nodes: [],
@@ -743,6 +757,7 @@ const GraphContainer = ({
                 if (transitionFramesIdx === transitionFrames.length - 1) {
                   isRunningRef.current = RunStatus.Complete;
                   setIsRunning(RunStatus.Complete);
+                  setShowResult(true);
                   // setIsRunning({ status: RunStatus.Complete });
                 }
               }}>

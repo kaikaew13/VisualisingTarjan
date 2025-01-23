@@ -15,6 +15,8 @@ function App() {
   const [tab, setTab] = useState(Tabs.SCC);
   const [highlightLines, setHighlightLines] = useState('');
   const [fileData, setFileData] = useState('');
+  const [result, setResult] = useState([]);
+  const [showResult, setShowResult] = useState(false);
 
   return (
     <div className='w-full h-screen flex flex-col bg-twblack'>
@@ -58,6 +60,7 @@ function App() {
                 className='hidden'
                 type='file'
                 onChange={(e) => {
+                  setShowResult(false);
                   if (fileData !== '') {
                     setFileData('');
                   }
@@ -97,8 +100,12 @@ function App() {
           setHighlightLines={setHighlightLines}
           fileData={fileData}
           setFileData={setFileData}
+          setResult={
+            setResult as React.Dispatch<React.SetStateAction<string[][]>>
+          }
+          setShowResult={setShowResult}
         />
-        <Result />
+        <Result result={result} showResult={showResult} />
       </div>
     </div>
   );
