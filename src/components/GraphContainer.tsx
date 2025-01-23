@@ -16,6 +16,7 @@ import { Tabs } from '../App';
 import Graph from './Graph';
 import Bigraph from './Bigraph';
 import { highlightCodeLines } from './Pseudocode';
+import { graph } from '../assets';
 
 enum RunStatus {
   Incomplete,
@@ -586,9 +587,12 @@ const GraphContainer = ({
 
   return (
     <div className='mx-4'>
-      <h3 className='text-twwhite text-xl font-poppins font-medium mb-3'>
-        Visualisation
-      </h3>
+      <span className='flex flex-row m-0 p-0'>
+        <img src={graph} alt='' className='h-7 w-7 mr-2' />
+        <h3 className='text-twwhite text-xl font-poppins font-medium mb-3'>
+          Visualisation
+        </h3>
+      </span>
       <div>
         {fileData === '' ? (
           <>

@@ -1,6 +1,8 @@
 import { CodeBlock, dracula } from 'react-code-blocks';
 import { Dispatch, SetStateAction, useEffect } from 'react';
 
+import { code } from '../assets';
+
 export const highlightCodeLines = {
   mainloop: '1-3',
   tarjaninit: '5-9,11',
@@ -56,9 +58,12 @@ const Pseudocode = ({ highlightLines }: PseudocodeProps) => {
   useEffect(() => {}, [highlightLines]);
   return (
     <div className='h-full text-xs flex flex-col '>
-      <h3 className='text-twwhite text-xl mb-3 font-poppins font-medium'>
-        Pseudocode
-      </h3>
+      <span className='flex flex-row m-0 p-0'>
+        <img src={code} alt='' className='w-7 h-7 mr-2' />
+        <h3 className='text-twwhite text-xl mb-3 font-poppins font-medium'>
+          Pseudocode
+        </h3>
+      </span>
       <CodeBlock
         text={PSEUDOCODE}
         language='jsx'
