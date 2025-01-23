@@ -65,12 +65,14 @@ interface GraphContainerProps {
   tab: Tabs;
   setHighlightLines: Dispatch<SetStateAction<string>>;
   fileData: string;
+  setFileData: Dispatch<SetStateAction<string>>;
 }
 
 const GraphContainer = ({
   tab,
   setHighlightLines,
   fileData,
+  setFileData,
 }: GraphContainerProps) => {
   const fgRef = useRef<ForceGraphMethods<any, LinkObject<any, IEdge>>>();
   const isRunningRef = useRef(RunStatus.Incomplete);
@@ -311,6 +313,8 @@ const GraphContainer = ({
       setIsGraphDirected(false);
       setIsAnimationDone(false);
     }
+    setIsRunning(RunStatus.Incomplete);
+    isRunningRef.current = RunStatus.Incomplete;
   };
 
   const playNextTransition = async (result: ITransitionFrame[], i: number) => {
@@ -553,6 +557,22 @@ const GraphContainer = ({
   };
 
   useEffect(() => {
+    console.log(fileData);
+
+    if (fileData === '') {
+      setGraphData({
+        nodes: [],
+        links: [],
+      });
+      setTransitionFramesIdx(0);
+      setTransitionFrames([]);
+      setHighlightLines('');
+      setIsRunning(RunStatus.Incomplete);
+      isRunningRef.current = RunStatus.Incomplete;
+    }
+  }, [fileData]);
+
+  useEffect(() => {
     setGraphData({
       nodes: [],
       links: [],
@@ -560,6 +580,8 @@ const GraphContainer = ({
     setTransitionFramesIdx(0);
     setTransitionFrames([]);
     setHighlightLines('');
+    setIsRunning(RunStatus.Incomplete);
+    isRunningRef.current = RunStatus.Incomplete;
   }, [tab]);
 
   return (
@@ -572,7 +594,7 @@ const GraphContainer = ({
           <>
             <div className='bg-twblack w-[720px] h-[500px] rounded-lg text-center flex items-center justify-center'>
               <h3 className='text-3xl font-poppins font-semibold text-twwhite-secondary '>
-                No Data
+                No Data Imported
               </h3>
             </div>
           </>
@@ -662,7 +684,8 @@ const GraphContainer = ({
                   (tab === Tabs.AllDifferent && !isGraphDirected) ||
                   isRunning === RunStatus.Running ||
                   transitionFramesIdx === 0 ||
-                  isAnimationDone
+                  isAnimationDone ||
+                  fileData === ''
                 }
                 onClick={async () => {
                   await playPrevTransition(
@@ -683,8 +706,8 @@ const GraphContainer = ({
               <Button
                 disabled={
                   (tab === Tabs.AllDifferent && !isGraphDirected) ||
-                  // isRunning === RunStatus.Running ||
-                  transitionFramesIdx === transitionFrames.length
+                  transitionFramesIdx === transitionFrames.length ||
+                  fileData === ''
                 }
                 onClick={async () => {
                   if (isRunningRef.current === RunStatus.Running) {
@@ -699,23 +722,6 @@ const GraphContainer = ({
                       transitionFramesIdx
                     );
                   }
-
-                  // if (isRunning.current === RunStatus.Running) {
-                  //   isRunning.current = RunStatus.Incomplete;
-                  //   // setIsRunning({ status: RunStatus.Incomplete });
-                  //   await delay(250);
-                  // } else {
-                  //   isRunning.current = RunStatus.Running;
-                  //   // setIsRunning({ status: RunStatus.Running });
-                  //   await delay(250);
-                  //   // playTransitionToEnd(
-                  //   //   transitionFrames,
-                  //   //   1000 / animationSpeed,
-                  //   //   transitionFramesIdx
-                  //   // );
-                  //   // setIsRunning(RunStatus.Complete);
-                  //   // await delay(250);
-                  // }
                 }}>
                 {isRunning === RunStatus.Running ? 'Stop' : 'Run'}
               </Button>
@@ -724,7 +730,8 @@ const GraphContainer = ({
               disabled={
                 (tab === Tabs.AllDifferent && !isGraphDirected) ||
                 isRunning === RunStatus.Running ||
-                transitionFramesIdx === transitionFrames.length
+                transitionFramesIdx === transitionFrames.length ||
+                fileData === ''
               }
               onClick={async () => {
                 await playNextTransition(transitionFrames, transitionFramesIdx);
@@ -741,7 +748,7 @@ const GraphContainer = ({
         </div>
         <div className='w-fit mx-auto flex flex-row items-center mt-4'>
           <Button
-            disabled={isRunning === RunStatus.Running}
+            disabled={isRunning === RunStatus.Running || fileData === ''}
             onClick={() => {
               resetGraph();
               isRunningRef.current = RunStatus.Incomplete;
@@ -750,7 +757,7 @@ const GraphContainer = ({
             }}>
             Reset
           </Button>
-          <div className='ml-4'>
+          <div className='mx-4'>
             <p className='text-twwhite font-poppins font-medium text-sm'>
               Animation Speed
             </p>
@@ -764,6 +771,13 @@ const GraphContainer = ({
               onChange={(val) => setAnimationSpeed(parseInt(val.target.value))}
             />
           </div>
+          <Button
+            disabled={fileData === '' || isRunning === RunStatus.Running}
+            onClick={() => {
+              setFileData('');
+            }}>
+            Clear
+          </Button>
         </div>
       </div>
     </div>

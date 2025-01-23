@@ -1,11 +1,4 @@
-import {
-  CodeBlock,
-  dracula,
-  monokai,
-  monokaiSublime,
-  github,
-} from 'react-code-blocks';
-import Button from './Button';
+import { CodeBlock, dracula } from 'react-code-blocks';
 import { Dispatch, SetStateAction, useEffect } from 'react';
 
 export const highlightCodeLines = {

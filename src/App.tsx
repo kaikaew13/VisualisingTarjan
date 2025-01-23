@@ -51,22 +51,29 @@ function App() {
           <Button disabled={false} secondary onClick={() => {}}>
             <>
               <label htmlFor='file-upload' className='hover:cursor-pointer'>
-                Import File
+                Import Data
               </label>
               <input
                 id='file-upload'
                 className='hidden'
                 type='file'
                 onChange={(e) => {
+                  if (fileData !== '') {
+                    setFileData('');
+                  }
+
                   e.preventDefault();
+                  // console.log(e.target.files);
+
                   const reader = new FileReader();
                   reader.onload = async (e) => {
                     const text = e.target?.result as string;
-                    console.log(text);
+                    // console.log(text);
                     setFileData(text);
-                    console.log(JSON.parse(text as string));
+                    // console.log(JSON.parse(text as string));
                   };
                   reader.readAsText(e.target.files![0]);
+                  e.target.value = '';
                 }}
               />
             </>
@@ -89,6 +96,7 @@ function App() {
           tab={tab}
           setHighlightLines={setHighlightLines}
           fileData={fileData}
+          setFileData={setFileData}
         />
         <Result />
       </div>
