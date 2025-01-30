@@ -9,6 +9,7 @@ import Result from './components/Result';
 export enum Tabs {
   SCC,
   AllDifferent,
+  Hamiltonian,
 }
 
 function App() {
@@ -37,15 +38,25 @@ function App() {
               Basic
             </Button>
           </span>
-
+          <span className='mr-8'>
+            <Button
+              onClick={() => {
+                if (tab === Tabs.AllDifferent) return;
+                setTab(Tabs.AllDifferent);
+                setFileData('');
+              }}
+              focus={tab === Tabs.AllDifferent}>
+              All-Different
+            </Button>
+          </span>
           <Button
             onClick={() => {
-              if (tab === Tabs.AllDifferent) return;
-              setTab(Tabs.AllDifferent);
+              if (tab === Tabs.Hamiltonian) return;
+              setTab(Tabs.Hamiltonian);
               setFileData('');
             }}
-            focus={tab === Tabs.AllDifferent}>
-            All-Different
+            focus={tab === Tabs.Hamiltonian}>
+            Hamiltonian
           </Button>
         </div>
 

@@ -7,6 +7,7 @@ import {
   INode,
 } from './components/GraphContainer';
 
+// generate random tree for testing purpose
 export const genRandomTree = (n = 10) => {
   return {
     nodes: [...Array(n).keys()].map((i) => ({
@@ -29,11 +30,110 @@ export const genRandomTree = (n = 10) => {
   };
 };
 
+// ---- reingold-tilford algorithm for drawing tree graph --------
+const D = 30;
+
+const setupTree = (graph: any) => {
+  for (let i = 0; i < Object.keys(graph).length; i++) {
+    graph[i].x = 0;
+    graph[i].y = 0;
+    graph[i].mod = 0;
+  }
+};
+
+const layoutTree = (node: any, graph: any, depth = 0, nextX = { value: 0 }) => {
+  if (!node) return;
+  node.y = depth * D * 0.5;
+  if (node.children.length === 0) {
+    node.x = nextX.value;
+    nextX.value += D;
+  } else {
+    node.children.forEach((each: any) => {
+      layoutTree(graph[parseInt(each)], graph, depth + 1, nextX);
+    });
+
+    resolveConflicts(node, graph);
+
+    const first = graph[parseInt(node.children[0])];
+    const last = graph[parseInt(node.children[node.children.length - 1])];
+    node.x = (first.x + last.x) / 2;
+  }
+};
+
+const resolveConflicts = (node: any, graph: any) => {
+  let shiftAmount = 0;
+  const minDistance = D;
+
+  const leftContour: number[] = [];
+  const rightContour: number[] = [];
+
+  getLeftContour(node, graph, 0, leftContour);
+  getRightContour(node, graph, 0, rightContour);
+
+  for (let i = 0; i < Math.min(leftContour.length, rightContour.length); i++) {
+    let dis = rightContour[i] - leftContour[i];
+    if (dis < minDistance) {
+      shiftAmount = Math.max(shiftAmount, minDistance - dis);
+    }
+  }
+
+  if (shiftAmount > 0) {
+    node.x += shiftAmount;
+    node.mod += shiftAmount;
+  }
+};
+
+const getLeftContour = (
+  node: any,
+  graph: any,
+  modSum: number,
+  contour: number[]
+) => {
+  if (!node) return;
+
+  const xPos = node.x + modSum;
+  if (contour[node.y] === undefined) {
+    contour[node.y] = xPos;
+  } else {
+    contour[node.y] = Math.min(contour[node.y], xPos);
+  }
+
+  node.children.forEach((each: any) =>
+    getLeftContour(graph[parseInt(each)], graph, modSum + node.mod, contour)
+  );
+};
+
+const getRightContour = (
+  node: any,
+  graph: any,
+  modSum: number,
+  contour: number[]
+) => {
+  if (!node) return;
+
+  const xPos = node.x + modSum;
+  if (contour[node.y] === undefined) {
+    contour[node.y] = xPos;
+  } else {
+    contour[node.y] = Math.max(contour[node.y], xPos);
+  }
+
+  node.children.forEach((each: any) =>
+    getRightContour(graph[parseInt(each)], graph, modSum + node.mod, contour)
+  );
+};
+
 export const genGraphFromObject = (
   graph: any,
   graphType: GraphType,
   firstRightNodeName = ''
 ) => {
+  if (graphType === GraphType.Tree) {
+    setupTree(graph);
+    layoutTree(graph[0], graph);
+    console.log(graph);
+  }
+
   const nodes: INode[] = [];
   const links: IEdge[] = [];
   let x = -50;
@@ -49,10 +149,30 @@ export const genGraphFromObject = (
       val: 1,
       name: graph[id].name,
       color: DEFAULT_NODE_COLOR,
-      x: graphType === GraphType.Regular ? undefined : x,
-      y: graphType === GraphType.Regular ? undefined : y,
-      fx: graphType === GraphType.Regular ? undefined : x,
-      fy: graphType === GraphType.Regular ? undefined : y,
+      x:
+        graphType === GraphType.Regular
+          ? undefined
+          : graphType === GraphType.Bipartite
+          ? x
+          : graph[id].x,
+      y:
+        graphType === GraphType.Regular
+          ? undefined
+          : graphType === GraphType.Bipartite
+          ? y
+          : graph[id].y,
+      fx:
+        graphType === GraphType.Regular
+          ? undefined
+          : graphType === GraphType.Bipartite
+          ? x
+          : graph[id].x,
+      fy:
+        graphType === GraphType.Regular
+          ? undefined
+          : graphType === GraphType.Bipartite
+          ? y
+          : graph[id].y,
     });
 
     graph[id].children.forEach((each: string) =>

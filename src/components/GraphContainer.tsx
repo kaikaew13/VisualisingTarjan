@@ -17,6 +17,7 @@ import Graph from './Graph';
 import Bigraph from './Bigraph';
 import { highlightCodeLines } from './Pseudocode';
 import { graph } from '../assets';
+import Treegraph from './Treegraph';
 
 enum RunStatus {
   Incomplete,
@@ -27,6 +28,7 @@ enum RunStatus {
 export enum GraphType {
   Regular,
   Bipartite,
+  Tree,
 }
 
 export const DEFAULT_NODE_COLOR = '#565167';
@@ -639,7 +641,7 @@ const GraphContainer = ({
             }}
             fileData={fileData}
           />
-        ) : (
+        ) : tab === Tabs.AllDifferent ? (
           <Bigraph
             graphData={graphData}
             fgRef={
@@ -654,6 +656,21 @@ const GraphContainer = ({
               setGraphData(gData);
             }}
             isDirected={isGraphDirected}
+            fileData={fileData}
+          />
+        ) : (
+          <Treegraph
+            graphData={graphData}
+            fgRef={
+              fgRef as React.MutableRefObject<
+                ForceGraphMethods<any, LinkObject<any, IEdge>>
+              >
+            }
+            tarjanCallback={(gData) => {
+              const adjList = makeAdjList(gData);
+              runTarjan(gData, adjList);
+              setGraphData(gData);
+            }}
             fileData={fileData}
           />
         )}
@@ -790,7 +807,7 @@ const GraphContainer = ({
             </p>
             <input
               disabled={isRunning === RunStatus.Running}
-              className=' accent-twpink'
+              className=' accent-twpink disabled:cursor-not-allowed'
               type='range'
               min='1'
               max='10'
