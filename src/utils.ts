@@ -153,7 +153,6 @@ export const genGraphFromObject = (
     const vis: boolean[] = [];
     setupTree(graph, vis);
     removeCycle(graph[0], graph, vis);
-    console.log(graph);
     layoutTree(graph[0], graph);
   }
 
