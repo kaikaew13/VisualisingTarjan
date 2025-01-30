@@ -57,18 +57,10 @@ const removeCycle = (node: any, graph: any, vis: boolean[]) => {
   node.tmpChildren = tmpChildren;
 };
 
-const layoutTree = (
-  node: any,
-  graph: any,
-  vis: boolean[],
-  depth = 0,
-  nextX = { value: 0 }
-) => {
+const layoutTree = (node: any, graph: any, depth = 0, nextX = { value: 0 }) => {
   if (!node) {
     return;
   }
-
-  // vis[node.id] = true;
 
   node.y = depth * D;
   if (node.tmpChildren.length === 0) {
@@ -76,9 +68,7 @@ const layoutTree = (
     nextX.value += D;
   } else {
     node.tmpChildren.forEach((each: any) => {
-      // if (!vis[parseInt(each)]) {
-      layoutTree(graph[parseInt(each)], graph, vis, depth + 1, nextX);
-      // }
+      layoutTree(graph[parseInt(each)], graph, depth + 1, nextX);
     });
 
     resolveConflicts(node, graph);
@@ -128,9 +118,7 @@ const getLeftContour = (
   }
 
   node.tmpChildren.forEach((each: any) => {
-    // if (!vis[parseInt(each)]) {
     getLeftContour(graph[parseInt(each)], graph, modSum + node.mod, contour);
-    // }
   });
 };
 
@@ -150,11 +138,11 @@ const getRightContour = (
   }
 
   node.tmpChildren.forEach((each: any) => {
-    // if (!vis[parseInt(each)]) {
     getRightContour(graph[parseInt(each)], graph, modSum + node.mod, contour);
-    // }
   });
 };
+
+// ---------------------------------------------------------
 
 export const genGraphFromObject = (
   graph: any,
@@ -166,7 +154,7 @@ export const genGraphFromObject = (
     setupTree(graph, vis);
     removeCycle(graph[0], graph, vis);
     console.log(graph);
-    layoutTree(graph[0], graph, vis);
+    layoutTree(graph[0], graph);
   }
 
   const nodes: INode[] = [];
