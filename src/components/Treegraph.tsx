@@ -35,7 +35,6 @@ const Treegraph = ({
       <ForceGraph2D
         ref={fgRef}
         graphData={graphData}
-        // cooldownTicks={100}
         cooldownTime={0}
         height={screen.height * 0.55}
         width={screen.width * 0.5}
@@ -49,10 +48,6 @@ const Treegraph = ({
         nodeRelSize={10}
         nodeCanvasObjectMode={() => 'after'}
         nodeCanvasObject={(node, ctx, globalScale) => {
-          // ctx.beginPath();
-          // ctx.arc(node.x, node.y, 10 * 1.4, 0, 2 * Math.PI, false);
-          // ctx.fillStyle = 'red';
-          // ctx.fill();
           const label = node.name;
           const fontSize = 10 / globalScale;
           ctx.font = `${fontSize}px Sans-Serif`;
@@ -79,8 +74,8 @@ const Treegraph = ({
 
           return cnt === 2 ? 0.1 : 0;
         }}
-        dagMode='td'
-        dagLevelDistance={100}
+        // dagMode='td'
+        // dagLevelDistance={100}
       />
     </div>
   );

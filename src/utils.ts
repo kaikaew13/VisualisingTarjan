@@ -31,31 +31,60 @@ export const genRandomTree = (n = 10) => {
 };
 
 // ---- reingold-tilford algorithm for drawing tree graph --------
-const D = 30;
+const D = 50;
 
-const setupTree = (graph: any) => {
+const setupTree = (graph: any, vis: boolean[]) => {
   for (let i = 0; i < Object.keys(graph).length; i++) {
+    graph[i].id = i;
     graph[i].x = 0;
     graph[i].y = 0;
     graph[i].mod = 0;
+    vis.push(false);
   }
 };
 
-const layoutTree = (node: any, graph: any, depth = 0, nextX = { value: 0 }) => {
+const removeCycle = (node: any, graph: any, vis: boolean[]) => {
   if (!node) return;
-  node.y = depth * D * 0.5;
-  if (node.children.length === 0) {
+  vis[node.id] = true;
+  const tmpChildren: string[] = [];
+  node.children.forEach((each: any) => {
+    if (!vis[parseInt(each)]) {
+      removeCycle(graph[parseInt(each)], graph, vis);
+      tmpChildren.push(each);
+    }
+  });
+
+  node.tmpChildren = tmpChildren;
+};
+
+const layoutTree = (
+  node: any,
+  graph: any,
+  vis: boolean[],
+  depth = 0,
+  nextX = { value: 0 }
+) => {
+  if (!node) {
+    return;
+  }
+
+  // vis[node.id] = true;
+
+  node.y = depth * D;
+  if (node.tmpChildren.length === 0) {
     node.x = nextX.value;
     nextX.value += D;
   } else {
-    node.children.forEach((each: any) => {
-      layoutTree(graph[parseInt(each)], graph, depth + 1, nextX);
+    node.tmpChildren.forEach((each: any) => {
+      // if (!vis[parseInt(each)]) {
+      layoutTree(graph[parseInt(each)], graph, vis, depth + 1, nextX);
+      // }
     });
 
     resolveConflicts(node, graph);
 
-    const first = graph[parseInt(node.children[0])];
-    const last = graph[parseInt(node.children[node.children.length - 1])];
+    const first = graph[parseInt(node.tmpChildren[0])];
+    const last = graph[parseInt(node.tmpChildren[node.tmpChildren.length - 1])];
     node.x = (first.x + last.x) / 2;
   }
 };
@@ -98,9 +127,11 @@ const getLeftContour = (
     contour[node.y] = Math.min(contour[node.y], xPos);
   }
 
-  node.children.forEach((each: any) =>
-    getLeftContour(graph[parseInt(each)], graph, modSum + node.mod, contour)
-  );
+  node.tmpChildren.forEach((each: any) => {
+    // if (!vis[parseInt(each)]) {
+    getLeftContour(graph[parseInt(each)], graph, modSum + node.mod, contour);
+    // }
+  });
 };
 
 const getRightContour = (
@@ -118,9 +149,11 @@ const getRightContour = (
     contour[node.y] = Math.max(contour[node.y], xPos);
   }
 
-  node.children.forEach((each: any) =>
-    getRightContour(graph[parseInt(each)], graph, modSum + node.mod, contour)
-  );
+  node.tmpChildren.forEach((each: any) => {
+    // if (!vis[parseInt(each)]) {
+    getRightContour(graph[parseInt(each)], graph, modSum + node.mod, contour);
+    // }
+  });
 };
 
 export const genGraphFromObject = (
@@ -129,57 +162,59 @@ export const genGraphFromObject = (
   firstRightNodeName = ''
 ) => {
   if (graphType === GraphType.Tree) {
-    setupTree(graph);
-    layoutTree(graph[0], graph);
+    const vis: boolean[] = [];
+    setupTree(graph, vis);
+    removeCycle(graph[0], graph, vis);
     console.log(graph);
+    layoutTree(graph[0], graph, vis);
   }
 
   const nodes: INode[] = [];
   const links: IEdge[] = [];
   let x = -50;
   let y = 0;
-  for (const id in graph) {
-    if (graph[id].name === firstRightNodeName) {
+  for (let i = 0; i < Object.keys(graph).length; i++) {
+    if (graph[i].name === firstRightNodeName) {
       y = 0;
       x = 50;
     }
 
     nodes.push({
-      id: parseInt(id),
+      id: i,
       val: 1,
-      name: graph[id].name,
+      name: graph[i].name,
       color: DEFAULT_NODE_COLOR,
       x:
         graphType === GraphType.Regular
           ? undefined
           : graphType === GraphType.Bipartite
           ? x
-          : graph[id].x,
+          : graph[i].x,
       y:
         graphType === GraphType.Regular
           ? undefined
           : graphType === GraphType.Bipartite
           ? y
-          : graph[id].y,
+          : graph[i].y,
       fx:
         graphType === GraphType.Regular
           ? undefined
           : graphType === GraphType.Bipartite
           ? x
-          : graph[id].x,
+          : graph[i].x,
       fy:
         graphType === GraphType.Regular
           ? undefined
           : graphType === GraphType.Bipartite
           ? y
-          : graph[id].y,
+          : graph[i].y,
     });
 
-    graph[id].children.forEach((each: string) =>
+    graph[i].children.forEach((each: string) =>
       links.push({
-        source: parseInt(id),
+        source: i,
         target: parseInt(each),
-        name: `${id} -> ${each}`,
+        name: `${i} -> ${each}`,
         color: DEFAULT_EDGE_COLOR,
       })
     );
