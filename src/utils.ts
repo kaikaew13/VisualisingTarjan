@@ -33,7 +33,7 @@ export const genRandomTree = (n = 10) => {
 // ---- reingold-tilford algorithm for drawing tree graph --------
 const D = 50;
 
-const setupTree = (graph: any, vis: boolean[]) => {
+export const setupTree = (graph: any, vis: boolean[]) => {
   for (let i = 0; i < Object.keys(graph).length; i++) {
     graph[i].id = i;
     graph[i].x = 0;
@@ -43,7 +43,7 @@ const setupTree = (graph: any, vis: boolean[]) => {
   }
 };
 
-const removeCycle = (node: any, graph: any, vis: boolean[]) => {
+export const removeCycle = (node: any, graph: any, vis: boolean[]) => {
   if (!node) return;
   vis[node.id] = true;
   const tmpChildren: string[] = [];
@@ -321,4 +321,42 @@ export const getUandVVertices = (adjList: number[][]) => {
 
   for (let i = 0; i < V.length; i++) V[i] -= diff;
   return { U, V, diff };
+};
+
+export const lowestCommonAncestor = (
+  node: number,
+  adjList: number[][],
+  vis: boolean[],
+  v: number,
+  w: number
+): number | undefined => {
+  if (node === undefined || node === v || node === w) {
+    return node;
+  }
+
+  vis[node] = true;
+
+  const lcaCandidates = [];
+  for (let i = 0; i < adjList[node].length; i++) {
+    const j = adjList[node][i];
+    if (!vis[j]) {
+      const candidate: number | undefined = lowestCommonAncestor(
+        j,
+        adjList,
+        vis,
+        v,
+        w
+      );
+      if (candidate) {
+        lcaCandidates.push(candidate);
+      }
+    }
+  }
+
+  if (lcaCandidates.length === 2) {
+    return node;
+  } else if (lcaCandidates.length === 1) {
+    return lcaCandidates[0] as number;
+  }
+  return undefined;
 };

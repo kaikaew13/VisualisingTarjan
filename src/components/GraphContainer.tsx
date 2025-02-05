@@ -10,6 +10,7 @@ import {
   genGraphFromObject,
   getFirstRightNodeName,
   getGraphObjFromIGraphData,
+  lowestCommonAncestor,
 } from '../utils';
 import Button from './Button';
 import { Tabs } from '../App';
@@ -156,6 +157,9 @@ const GraphContainer = ({
     });
 
     const SCCs = [];
+    // for HCC
+    node.subtrees = [];
+    node.subtreesMap = {};
 
     order[node.id] = id[0];
     low[node.id] = id[0]++;
@@ -164,7 +168,6 @@ const GraphContainer = ({
 
     for (let i = 0; i < adjList[node.id].length; i++) {
       const j = adjList[node.id][i];
-
       let edge = edgeDict[node.id][j];
       if (order[j] === -1) {
         result.push({
@@ -187,6 +190,8 @@ const GraphContainer = ({
           code: highlightCodeLines.neighborif,
         });
 
+        // for HCC
+        node.subtrees.push([j]);
         const sccs: number[][] = tarjan(
           gData,
           gData.nodes[j],
@@ -296,6 +301,17 @@ const GraphContainer = ({
     });
     // }
 
+    // for HCC, find subtree of node
+    for (let i = 0; i < node.subtrees.length; i++) {
+      const j = node.subtrees[i][0];
+      node.subtreesMap[j] = i;
+      const tmp: number[] = gData.nodes[j].subtrees.flat();
+      for (let k = 0; k < tmp.length; k++) {
+        node.subtrees[i].push(tmp[k]);
+        node.subtreesMap[tmp[k]] = i;
+      }
+    }
+
     return SCCs;
   };
 
@@ -374,10 +390,47 @@ const GraphContainer = ({
     // setIsRunning({ status: RunStatus.Complete });
   };
 
+  const pruneEdges = (
+    edgesToRemove: IEdge[],
+    gData: IGraphData,
+    adjList: number[][],
+    edgeDict: IEdge[][]
+  ) => {
+    for (let v = 0; v < adjList.length; v++) {
+      const tmp = adjList[v];
+      for (let j = 0; j < tmp.length; j++) {
+        const w = tmp[j];
+
+        // case 1
+        if (w === 0 && gData.nodes[w].subtreesMap[v] !== 0) {
+          edgesToRemove.push(edgeDict[v][w]);
+        }
+
+        // case 2
+        if (
+          v === 0 &&
+          gData.nodes[v].subtreesMap[w] !== gData.nodes[v].subtrees.length - 1
+        ) {
+          edgesToRemove.push(edgeDict[v][w]);
+        }
+
+        // case 4
+        const vis = Array(adjList.length).fill(false);
+        const ancestor = lowestCommonAncestor(0, adjList, vis, v, w);
+        if (
+          ancestor !== undefined &&
+          gData.nodes[ancestor].subtreesMap[w] + 1 <
+            gData.nodes[ancestor].subtreesMap[v]
+        ) {
+          edgesToRemove.push(edgeDict[v][w]);
+        }
+      }
+    }
+  };
+
   const runTarjan = (gData: IGraphData, adjList: number[][]) => {
     const MAX = 2e9 + 7;
     const id = [0];
-
     const edgeDict = makeEdgeDict(gData);
 
     const order = adjList.map(() => -1);
@@ -387,6 +440,7 @@ const GraphContainer = ({
     const result: ITransitionFrame[] = [];
 
     const SCCs: number[][] = [];
+
     for (let i = 0; i < adjList.length; i++) {
       if (order[gData.nodes[i].id] === -1) {
         result.push({
@@ -412,6 +466,13 @@ const GraphContainer = ({
           sccs.forEach((each: number[]) => SCCs.push(each));
         }
       }
+    }
+
+    // for HCC
+    if (tab === Tabs.Hamiltonian) {
+      const edgesToRemove: IEdge[] = [];
+      pruneEdges(edgesToRemove, gData, adjList, edgeDict);
+      console.log(edgesToRemove);
     }
 
     // passing result to Result block

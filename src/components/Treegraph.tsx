@@ -4,8 +4,14 @@ import ForceGraph2D, {
 } from 'react-force-graph-2d';
 
 import { GraphType, IEdge, IGraphData } from './GraphContainer';
-import { useEffect } from 'react';
-import { delay, genGraphFromJSON } from '../utils';
+import { useEffect, useState } from 'react';
+import {
+  delay,
+  genGraphFromJSON,
+  genGraphFromObject,
+  removeCycle,
+  setupTree,
+} from '../utils';
 
 interface TreegraphProps {
   graphData: IGraphData;
@@ -20,15 +26,33 @@ const Treegraph = ({
   tarjanCallback,
   fileData,
 }: TreegraphProps) => {
+  const [tmpGraph, setTmpGraph] = useState<IGraphData>({
+    nodes: [],
+    links: [],
+  });
+
   useEffect(() => {
     if (graphData.links.length === 0) {
       (async () => {
         const gData = await genGraphFromJSON(fileData, GraphType.Tree);
+        createTmpGraph();
         tarjanCallback(gData);
         await delay(0);
       })();
     }
   }, [graphData]);
+
+  const createTmpGraph = () => {
+    const tmp = JSON.parse(fileData);
+    const vis: boolean[] = [];
+    setupTree(tmp, vis);
+    removeCycle(tmp[0], tmp, vis);
+    for (let i = 0; i < Object.keys(tmp).length; i++) {
+      tmp[i].children = tmp[i].tmpChildren;
+    }
+
+    setTmpGraph(genGraphFromObject(tmp, GraphType.Tree));
+  };
 
   return (
     <div className='rounded-lg p-1 bg-twblack'>
@@ -61,10 +85,12 @@ const Treegraph = ({
         linkDirectionalArrowRelPos={1}
         linkCurvature={(link) => {
           let cnt = 0;
-          const tmp = graphData.links;
+          let tmp = graphData.links;
+
           // self edge
           if (link.source === link.target) return 0.8;
 
+          //   2-node cycle
           for (let i = 0; i < tmp.length; i++) {
             if (tmp[i].source === link.source && tmp[i].target === link.target)
               cnt++;
@@ -72,7 +98,19 @@ const Treegraph = ({
               cnt++;
           }
 
-          return cnt === 2 ? 0.1 : 0;
+          let cnt2 = 0;
+          tmp = tmpGraph.links;
+
+          for (let i = 0; i < tmp.length; i++) {
+            if (
+              tmp[i].source === link.source.id &&
+              tmp[i].target === link.target.id
+            ) {
+              cnt2++;
+            }
+          }
+
+          return cnt === 2 ? 0.1 : cnt2 === 0 ? 0.2 : 0;
         }}
         // dagMode='td'
         // dagLevelDistance={100}
