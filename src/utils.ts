@@ -323,18 +323,85 @@ export const getUandVVertices = (adjList: number[][]) => {
   return { U, V, diff };
 };
 
-export const lowestCommonAncestor = (
+export const pruneEdges = (
+  edgesToRemove: IEdge[],
+  gData: IGraphData,
+  adjList: number[][],
+  edgeDict: IEdge[][]
+) => {
+  for (let v = 0; v < adjList.length; v++) {
+    const tmp = adjList[v];
+    for (let j = 0; j < tmp.length; j++) {
+      const w = tmp[j];
+
+      // case 1
+      if (w === 0 && gData.nodes[w].subtreesMap[v] !== 0) {
+        edgesToRemove.push(edgeDict[v][w]);
+      }
+
+      // case 2
+      if (
+        v === 0 &&
+        gData.nodes[v].subtreesMap[w] !== gData.nodes[v].subtrees.length - 1
+      ) {
+        edgesToRemove.push(edgeDict[v][w]);
+      }
+
+      // case 3
+      if (v !== 0 && w === adjList[v][0] && !hasBackEdge(w, adjList, gData)) {
+        if (gData.nodes[v].parent !== gData.nodes[w].parent) {
+          edgesToRemove.push(edgeDict[v][w]);
+        }
+      }
+
+      // case 4
+      const vis = Array(adjList.length).fill(false);
+      const ancestor = lowestCommonAncestor(0, adjList, vis, v, w);
+      if (
+        ancestor !== undefined &&
+        gData.nodes[ancestor].subtreesMap[w] + 1 <
+          gData.nodes[ancestor].subtreesMap[v]
+      ) {
+        edgesToRemove.push(edgeDict[v][w]);
+      }
+    }
+  }
+};
+
+const hasBackEdge = (node: number, adjList: number[][], gData: IGraphData) => {
+  for (let i = 0; i < adjList[node].length; i++) {
+    const j = adjList[node][i];
+    if (
+      j !== gData.nodes[j].parent.id &&
+      // neighbor to the left of w
+      (gData.nodes[j].x < gData.nodes[node].x ||
+        // neighbor right on top of w
+        (gData.nodes[j].x === gData.nodes[node].x &&
+          gData.nodes[j].y < gData.nodes[node].y))
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
+const lowestCommonAncestor = (
   node: number,
   adjList: number[][],
   vis: boolean[],
   v: number,
   w: number
 ): number | undefined => {
-  if (node === undefined || node === v || node === w) {
-    return node;
+  if (node === undefined) {
+    return undefined;
   }
 
   vis[node] = true;
+
+  if (node === v || node === w) {
+    return node;
+  }
 
   const lcaCandidates = [];
   for (let i = 0; i < adjList[node].length; i++) {

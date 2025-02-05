@@ -10,7 +10,7 @@ import {
   genGraphFromObject,
   getFirstRightNodeName,
   getGraphObjFromIGraphData,
-  lowestCommonAncestor,
+  pruneEdges,
 } from '../utils';
 import Button from './Button';
 import { Tabs } from '../App';
@@ -192,6 +192,7 @@ const GraphContainer = ({
 
         // for HCC
         node.subtrees.push([j]);
+        gData.nodes[j].parent = node;
         const sccs: number[][] = tarjan(
           gData,
           gData.nodes[j],
@@ -388,44 +389,6 @@ const GraphContainer = ({
     setIsRunning(RunStatus.Complete);
     setShowResult(true);
     // setIsRunning({ status: RunStatus.Complete });
-  };
-
-  const pruneEdges = (
-    edgesToRemove: IEdge[],
-    gData: IGraphData,
-    adjList: number[][],
-    edgeDict: IEdge[][]
-  ) => {
-    for (let v = 0; v < adjList.length; v++) {
-      const tmp = adjList[v];
-      for (let j = 0; j < tmp.length; j++) {
-        const w = tmp[j];
-
-        // case 1
-        if (w === 0 && gData.nodes[w].subtreesMap[v] !== 0) {
-          edgesToRemove.push(edgeDict[v][w]);
-        }
-
-        // case 2
-        if (
-          v === 0 &&
-          gData.nodes[v].subtreesMap[w] !== gData.nodes[v].subtrees.length - 1
-        ) {
-          edgesToRemove.push(edgeDict[v][w]);
-        }
-
-        // case 4
-        const vis = Array(adjList.length).fill(false);
-        const ancestor = lowestCommonAncestor(0, adjList, vis, v, w);
-        if (
-          ancestor !== undefined &&
-          gData.nodes[ancestor].subtreesMap[w] + 1 <
-            gData.nodes[ancestor].subtreesMap[v]
-        ) {
-          edgesToRemove.push(edgeDict[v][w]);
-        }
-      }
-    }
   };
 
   const runTarjan = (gData: IGraphData, adjList: number[][]) => {
