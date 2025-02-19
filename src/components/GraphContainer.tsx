@@ -11,6 +11,7 @@ import {
   getFirstRightNodeName,
   getGraphObjFromIGraphData,
   pruneEdges,
+  HCC_CASE,
 } from '../utils';
 import Button from './Button';
 import { Tabs } from '../App';
@@ -36,6 +37,7 @@ export const DEFAULT_NODE_COLOR = '#565167';
 export const DISCOVERED_NODE_COLOR = '#6272A4';
 export const DEFAULT_EDGE_COLOR = '#F8F8F2';
 export const HIGHLIGHTED_EDGE_COLOR = '#50FA7B';
+export const TW_PINK = '#FF79C6';
 
 export interface ITransitionFrame {
   x: INode | IEdge | null;
@@ -70,7 +72,8 @@ interface GraphContainerProps {
   setHighlightLines: Dispatch<SetStateAction<string>>;
   fileData: string;
   setFileData: Dispatch<SetStateAction<string>>;
-  setResult: React.Dispatch<React.SetStateAction<string[][]>>;
+  setResSCCs: React.Dispatch<React.SetStateAction<string[][]>>;
+  setResHCC: React.Dispatch<React.SetStateAction<IEdge[][]>>;
   setShowResult: Dispatch<SetStateAction<boolean>>;
 }
 
@@ -79,22 +82,14 @@ const GraphContainer = ({
   setHighlightLines,
   fileData,
   setFileData,
-  setResult,
+  setResSCCs,
+  setResHCC,
   setShowResult,
 }: GraphContainerProps) => {
   const fgRef = useRef<ForceGraphMethods<any, LinkObject<any, IEdge>>>();
   const isRunningRef = useRef(RunStatus.Incomplete);
   const [isRunning, setIsRunning] = useState(RunStatus.Incomplete);
   const [graphData, setGraphData] = useState<IGraphData>({
-    nodes: [],
-    links: [],
-  });
-  const [graphDataEdgesRemoved, setGraphDataEdgesRemoved] =
-    useState<IGraphData>({
-      nodes: [],
-      links: [],
-    });
-  const [graphDataMaxMatching, setGraphDataMaxMatching] = useState<IGraphData>({
     nodes: [],
     links: [],
   });
@@ -105,6 +100,20 @@ const GraphContainer = ({
   const [isGraphDirected, setIsGraphDirected] = useState(false);
   const [isAnimationDone, setIsAnimationDone] = useState(false);
   const [animationSpeed, setAnimationSpeed] = useState(5);
+
+  // for All-different
+  const [graphDataEdgesRemoved, setGraphDataEdgesRemoved] =
+    useState<IGraphData>({
+      nodes: [],
+      links: [],
+    });
+  const [graphDataMaxMatching, setGraphDataMaxMatching] = useState<IGraphData>({
+    nodes: [],
+    links: [],
+  });
+
+  // for HCC
+  const [HCCredundantEdges, setHCCredundantEdges] = useState<IEdge[]>([]);
 
   const changeEdgeColor = (edge: IEdge, color: string) => {
     const tmp = { ...graphData };
@@ -324,7 +333,7 @@ const GraphContainer = ({
       changeNodeColor(each, 'unfocus');
     });
     graphData.links.forEach((each) => {
-      if (each.color === HIGHLIGHTED_EDGE_COLOR)
+      if (each.color !== DEFAULT_EDGE_COLOR)
         changeEdgeColor(each, DEFAULT_EDGE_COLOR);
     });
     if (tab === Tabs.AllDifferent) {
@@ -335,6 +344,9 @@ const GraphContainer = ({
       setGraphData(tmp);
       setGraphDataEdgesRemoved(tmp2);
       setIsGraphDirected(false);
+      setIsAnimationDone(false);
+    }
+    if (tab === Tabs.Hamiltonian) {
       setIsAnimationDone(false);
     }
     setIsRunning(RunStatus.Incomplete);
@@ -433,9 +445,16 @@ const GraphContainer = ({
 
     // for HCC
     if (tab === Tabs.Hamiltonian) {
-      const edgesToRemove: IEdge[] = [];
+      const edgesToRemove: { edge: IEdge; case: number }[] = [];
       pruneEdges(edgesToRemove, gData, adjList, edgeDict);
-      console.log(edgesToRemove);
+      setHCCredundantEdges(edgesToRemove.map((each) => each.edge));
+
+      const tmp: IEdge[][] = [[], [], [], []];
+      edgesToRemove.forEach((each) => {
+        tmp[each.case].push(each.edge);
+      });
+
+      setResHCC(tmp);
     }
 
     // passing result to Result block
@@ -449,7 +468,7 @@ const GraphContainer = ({
       res.push(tmp);
     });
 
-    setResult(res);
+    setResSCCs(res);
 
     return SCCs;
   };
@@ -498,7 +517,7 @@ const GraphContainer = ({
     maxMatchingEdges.forEach((each) => {
       if (each) {
         const tmp = newGData.links.find((each_) => each_.name === each.name);
-        if (tmp) tmp.color = '#FF79C6';
+        if (tmp) tmp.color = TW_PINK;
       }
     });
 
@@ -702,15 +721,15 @@ const GraphContainer = ({
       <div className='w-full'>
         <div className='w-fit mx-auto mt-4'>
           <div className='w-full inline-block'>
-            {tab === Tabs.AllDifferent && (
+            {tab === Tabs.AllDifferent ? (
               <>
                 <span className='mr-4'>
                   <Button
                     disabled={
                       (isGraphDirected &&
                         transitionFramesIdx !== transitionFrames.length) ||
-                      isAnimationDone ||
-                      fileData === ''
+                      fileData === '' ||
+                      isAnimationDone
                     }
                     onClick={() => {
                       if (!isGraphDirected) {
@@ -743,6 +762,28 @@ const GraphContainer = ({
                   </Button>
                 </span>
               </>
+            ) : (
+              tab === Tabs.Hamiltonian && (
+                <>
+                  <span className='mr-4'>
+                    <Button
+                      disabled={
+                        // (isGraphDirected &&
+                        transitionFramesIdx !== transitionFrames.length ||
+                        fileData === '' ||
+                        isAnimationDone
+                      }
+                      onClick={() => {
+                        HCCredundantEdges.forEach((each) =>
+                          changeEdgeColor(each, TW_PINK)
+                        );
+                        setIsAnimationDone(true);
+                      }}>
+                      Highlight redundant edges
+                    </Button>
+                  </span>
+                </>
+              )
             )}
 
             <span className='mr-4'>

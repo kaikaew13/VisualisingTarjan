@@ -1,11 +1,14 @@
 import { dots, doc } from '../assets';
+import { HCCCaseMap } from '../utils';
+import { IEdge } from './GraphContainer';
 
 interface ResultProps {
-  result: string[][];
+  resSCCs: string[][];
+  resHCC?: IEdge[][];
   showResult: boolean;
 }
 
-function Result({ result, showResult }: ResultProps) {
+function Result({ resSCCs, resHCC = [], showResult }: ResultProps) {
   return (
     <div className='h-full w-full flex flex-col'>
       <span className='flex flex-row m-0 p-0'>
@@ -20,11 +23,28 @@ function Result({ result, showResult }: ResultProps) {
         </div>
       ) : (
         <div className='w-full bg-twblack h-full rounded-lg flex flex-col p-3 overflow-y-auto'>
-          {result.map((val, i) => (
+          {resHCC.length > 0 &&
+            resHCC.map((val, i) => (
+              <div
+                key={i}
+                className={`bg-twblack-secondary p-3 rounded-lg mb-3`}>
+                <div className='text-twwhite font-medium text-sm font-poppins underline'>
+                  {`Case ${i + 1}: ${HCCCaseMap[i]}`}
+                </div>
+                {val.map((each, j) => (
+                  <div
+                    key={j}
+                    className='text-twwhite font-normal text-sm font-poppins'>
+                    {each.name}
+                  </div>
+                ))}
+              </div>
+            ))}
+          {resSCCs.map((val, i) => (
             <div
               key={i}
               className={`bg-twblack-secondary p-3 rounded-lg ${
-                i !== result.length - 1 && 'mb-3'
+                i !== resSCCs.length - 1 && 'mb-3'
               }`}>
               <div className='text-twwhite font-medium text-sm font-poppins underline'>
                 SCC #{i + 1}

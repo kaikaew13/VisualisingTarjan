@@ -8,13 +8,13 @@ interface ButtonProps {
   secondary?: boolean;
 }
 
-function Button({
+const Button = ({
   disabled = false,
   children,
   onClick,
   focus = false,
   secondary = false,
-}: ButtonProps) {
+}: ButtonProps) => {
   return secondary ? (
     <button
       disabled={disabled}
@@ -38,6 +38,6 @@ function Button({
     </button>
     // </div>
   );
-}
+};
 
 export default Button;

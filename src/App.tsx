@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import Button from './components/Button';
-import GraphContainer from './components/GraphContainer';
+import GraphContainer, { IEdge } from './components/GraphContainer';
 import Pseudocode from './components/Pseudocode';
 
 import { gh } from './assets';
 import Result from './components/Result';
+import useSnackbar from './hooks/useSnackbar';
+import { HCC_CASE } from './utils';
 
 export enum Tabs {
   SCC,
@@ -16,8 +18,11 @@ function App() {
   const [tab, setTab] = useState(Tabs.SCC);
   const [highlightLines, setHighlightLines] = useState('');
   const [fileData, setFileData] = useState('');
-  const [result, setResult] = useState([]);
+  const [resSCCs, setResSCCs] = useState([]);
+  const [resHCC, setResHCC] = useState<IEdge[][]>([]);
   const [showResult, setShowResult] = useState(false);
+
+  const addSnackbar = useSnackbar();
 
   return (
     <div className='w-full h-screen flex flex-col bg-twblack'>
@@ -71,13 +76,21 @@ function App() {
                 className='hidden'
                 type='file'
                 onChange={(e) => {
+                  e.preventDefault();
+                  if (!e.target.files![0].name.endsWith('json')) {
+                    addSnackbar({
+                      key: 'error',
+                      text: 'Data imported is not JSON',
+                      variant: 'error',
+                    });
+
+                    return;
+                  }
+
                   setShowResult(false);
                   if (fileData !== '') {
                     setFileData('');
                   }
-
-                  e.preventDefault();
-                  // console.log(e.target.files);
 
                   const reader = new FileReader();
                   reader.onload = async (e) => {
@@ -111,12 +124,17 @@ function App() {
           setHighlightLines={setHighlightLines}
           fileData={fileData}
           setFileData={setFileData}
-          setResult={
-            setResult as React.Dispatch<React.SetStateAction<string[][]>>
+          setResSCCs={
+            setResSCCs as React.Dispatch<React.SetStateAction<string[][]>>
           }
+          setResHCC={setResHCC}
           setShowResult={setShowResult}
         />
-        <Result result={result} showResult={showResult} />
+        <Result
+          resSCCs={resSCCs}
+          resHCC={tab === Tabs.Hamiltonian ? resHCC : undefined}
+          showResult={showResult}
+        />
       </div>
     </div>
   );

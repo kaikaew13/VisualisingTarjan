@@ -201,7 +201,7 @@ export const genGraphFromObject = (
       links.push({
         source: i,
         target: parseInt(each),
-        name: `${i} -> ${each}`,
+        name: `${graph[i].name} -> ${graph[parseInt(each)].name}`,
         color: DEFAULT_EDGE_COLOR,
       })
     );
@@ -323,8 +323,25 @@ export const getUandVVertices = (adjList: number[][]) => {
   return { U, V, diff };
 };
 
+export enum HCC_CASE {
+  PRUNE_SKIP_TO_ROOT,
+  PRUNE_ROOT,
+  PRUNE_WITHIN,
+  PRUNE_SKIP,
+}
+
+export const HCCCaseMap: { [key: number]: string } = {
+  0: 'Prune to root',
+  1: 'Prune root',
+  2: 'Prune within',
+  3: 'Prune skip',
+};
+
 export const pruneEdges = (
-  edgesToRemove: IEdge[],
+  edgesToRemove: {
+    edge: IEdge;
+    case: HCC_CASE;
+  }[],
   gData: IGraphData,
   adjList: number[][],
   edgeDict: IEdge[][]
@@ -336,7 +353,10 @@ export const pruneEdges = (
 
       // case 1
       if (w === 0 && gData.nodes[w].subtreesMap[v] !== 0) {
-        edgesToRemove.push(edgeDict[v][w]);
+        edgesToRemove.push({
+          edge: edgeDict[v][w],
+          case: HCC_CASE.PRUNE_SKIP_TO_ROOT,
+        });
       }
 
       // case 2
@@ -344,25 +364,43 @@ export const pruneEdges = (
         v === 0 &&
         gData.nodes[v].subtreesMap[w] !== gData.nodes[v].subtrees.length - 1
       ) {
-        edgesToRemove.push(edgeDict[v][w]);
+        edgesToRemove.push({
+          edge: edgeDict[v][w],
+          case: HCC_CASE.PRUNE_ROOT,
+        });
       }
 
       // case 3
-      if (v !== 0 && w === adjList[v][0] && !hasBackEdge(w, adjList, gData)) {
+      let vis = Array(adjList.length).fill(false);
+      let ancestor = lowestCommonAncestor(0, adjList, vis, v, w);
+      if (
+        v !== 0 &&
+        w !== 0 &&
+        ancestor !== undefined &&
+        ancestor !== w &&
+        w === adjList[v][0] &&
+        !hasBackEdge(w, adjList, gData)
+      ) {
         if (gData.nodes[v].parent !== gData.nodes[w].parent) {
-          edgesToRemove.push(edgeDict[v][w]);
+          edgesToRemove.push({
+            edge: edgeDict[v][w],
+            case: HCC_CASE.PRUNE_WITHIN,
+          });
         }
       }
 
       // case 4
-      const vis = Array(adjList.length).fill(false);
-      const ancestor = lowestCommonAncestor(0, adjList, vis, v, w);
+      vis = Array(adjList.length).fill(false);
+      ancestor = lowestCommonAncestor(0, adjList, vis, v, w);
       if (
         ancestor !== undefined &&
         gData.nodes[ancestor].subtreesMap[w] + 1 <
           gData.nodes[ancestor].subtreesMap[v]
       ) {
-        edgesToRemove.push(edgeDict[v][w]);
+        edgesToRemove.push({
+          edge: edgeDict[v][w],
+          case: HCC_CASE.PRUNE_SKIP,
+        });
       }
     }
   }
@@ -371,13 +409,27 @@ export const pruneEdges = (
 const hasBackEdge = (node: number, adjList: number[][], gData: IGraphData) => {
   for (let i = 0; i < adjList[node].length; i++) {
     const j = adjList[node][i];
+    // console.log(j, node);
+    const vis = Array(adjList.length).fill(false);
+    const ancestor = lowestCommonAncestor(0, adjList, vis, node, j);
+    // j is child
+    if (ancestor !== undefined && ancestor === node) {
+      continue;
+    }
+
     if (
-      j !== gData.nodes[j].parent.id &&
-      // neighbor to the left of w
-      (gData.nodes[j].x < gData.nodes[node].x ||
-        // neighbor right on top of w
-        (gData.nodes[j].x === gData.nodes[node].x &&
-          gData.nodes[j].y < gData.nodes[node].y))
+      // j is root, there backedge
+      j === 0 ||
+      (ancestor !== undefined &&
+        // j is ancestor, therefore backedge
+        ancestor === j &&
+        j !== gData.nodes[node].parent.id) ||
+      (j !== gData.nodes[node].parent.id &&
+        // neighbor to the left of w
+        (gData.nodes[j].x < gData.nodes[node].x ||
+          // neighbor right on top of w
+          (gData.nodes[j].x === gData.nodes[node].x &&
+            gData.nodes[j].y < gData.nodes[node].y)))
     ) {
       return true;
     }
