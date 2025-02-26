@@ -1,7 +1,5 @@
 # Tarjan Visualiser: Visualising Applications of Tarjan's Algorithm in Constraint Programming
 
-## Overview
-
 This project implements and visualises applications of **Tarjan's Algorithm** in **Constraint Programming**. It supports:
 - **Identifying Strongly Connected Components (SCCs)** in directed graphs.
 - **Solving the All-Different Constraint** using SCC decomposition.
