@@ -12,13 +12,14 @@ import {
   getGraphObjFromIGraphData,
   pruneEdges,
   HCC_CASE,
+  genGraphFromJSON,
 } from '../utils';
 import Button from './Button';
 import { Tabs } from '../App';
 import Graph from './Graph';
 import Bigraph from './Bigraph';
 import { highlightCodeLines } from './Pseudocode';
-import { graph } from '../assets';
+import { arrow, graph } from '../assets';
 import Treegraph from './Treegraph';
 
 enum RunStatus {
@@ -663,10 +664,29 @@ const GraphContainer = ({
       <div>
         {fileData === '' ? (
           <>
-            <div className='bg-twblack w-[720px] h-[500px] rounded-lg text-center flex items-center justify-center'>
+            <div className='bg-twblack-secondary w-[720px] h-[500px] rounded-lg text-center flex flex-col items-center justify-center'>
               <h3 className='text-3xl font-poppins font-semibold text-twwhite-secondary '>
                 No Data Imported
               </h3>
+              <div
+                className='mt-4 flex flex-row hover:cursor-pointer'
+                onClick={async () => {
+                  let filename = 'basic1';
+                  if (tab === Tabs.AllDifferent) {
+                    filename = 'alldifferent3';
+                  } else if (tab === Tabs.Hamiltonian) {
+                    filename = 'hamiltonian2';
+                  }
+
+                  const res = await fetch(`./src/example/${filename}.json`);
+                  const data = await res.text();
+                  setFileData(data);
+                }}>
+                <h6 className=' text-base font-poppins font-medium text-twwhite-secondary underline '>
+                  Try example graph
+                </h6>
+                <img src={arrow} alt='' className='h-6' />
+              </div>
             </div>
           </>
         ) : tab === Tabs.SCC ? (

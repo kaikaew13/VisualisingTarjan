@@ -73,7 +73,7 @@ const Pseudocode = ({ highlightLines }: PseudocodeProps) => {
         customStyle={{
           overflowY: 'scroll',
           height: '100%',
-          backgroundColor: '#0E0D11',
+          backgroundColor: '#1D1B22',
           borderRadius: '8px',
         }}
       />

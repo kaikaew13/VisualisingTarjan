@@ -37,7 +37,7 @@ const Graph = ({ graphData, fgRef, tarjanCallback, fileData }: GraphProps) => {
   }, [graphData]);
 
   return (
-    <div className='rounded-lg p-1 bg-twblack'>
+    <div className='rounded-lg p-1 bg-twblack-secondary'>
       <ForceGraph2D
         ref={fgRef}
         graphData={graphData}
@@ -46,7 +46,7 @@ const Graph = ({ graphData, fgRef, tarjanCallback, fileData }: GraphProps) => {
         height={screen.height * 0.55}
         width={screen.width * 0.5}
         maxZoom={5}
-        backgroundColor='#0E0D11'
+        backgroundColor='#1D1B22'
         enablePanInteraction={true}
         autoPauseRedraw
         onEngineStop={() => fgRef!.current!.zoomToFit(500)}

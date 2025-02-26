@@ -18,11 +18,11 @@ function Result({ resSCCs, resHCC = [], showResult }: ResultProps) {
         </h3>
       </span>
       {!showResult ? (
-        <div className='w-full bg-twblack h-full rounded-lg flex items-center justify-center'>
+        <div className='w-full bg-twblack-secondary h-full rounded-lg flex items-center justify-center'>
           <img src={dots} alt='' className='h-[30px]' />
         </div>
       ) : (
-        <div className='w-full bg-twblack h-full rounded-lg flex flex-col p-3 overflow-y-auto'>
+        <div className='w-full bg-twblack-secondary h-full rounded-lg flex flex-col p-3 overflow-y-auto'>
           {resHCC.length > 0 &&
             resHCC.map((val, i) => (
               <div

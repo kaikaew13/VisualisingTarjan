@@ -28,7 +28,7 @@ function App() {
     <div className='w-full h-screen flex flex-col bg-twblack'>
       <div className='flex justify-between'>
         <h1 className='mx-4 mt-4 h-full text-3xl font-semibold text-twwhite font-poppins'>
-          Tarjan <span className='text-twpink'>Visualiser</span>
+          Tarjan Visualiser
         </h1>
 
         <div className=' mt-6'>
@@ -97,6 +97,8 @@ function App() {
                     const text = e.target?.result as string;
                     // console.log(text);
                     setFileData(text);
+                    console.log(text);
+
                     // console.log(JSON.parse(text as string));
                   };
                   reader.readAsText(e.target.files![0]);
@@ -114,7 +116,7 @@ function App() {
           </a>
         </div>
       </div>
-      <div className='h-full bg-twblack-secondary m-4 p-4 flex flex-row overflow-y-auto rounded-lg'>
+      <div className='h-full m-4 p-4 flex flex-row overflow-y-auto rounded-lg'>
         <Pseudocode
           highlightLines={highlightLines}
           setHighlightLines={setHighlightLines}
