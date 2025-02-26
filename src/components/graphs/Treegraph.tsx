@@ -2,47 +2,64 @@ import ForceGraph2D, {
   ForceGraphMethods,
   LinkObject,
 } from 'react-force-graph-2d';
-import * as d3Force from 'd3-force';
 
-import { GraphType, IEdge, IGraphData } from './GraphContainer';
+import { GraphType, IEdge, IGraphData } from '../GraphContainer';
 import { useEffect, useState } from 'react';
-import { delay, genGraphFromJSON } from '../utils';
+import {
+  delay,
+  genGraphFromJSON,
+  genGraphFromObject,
+  removeCycle,
+  setupTree,
+} from '../../utils';
 
-interface GraphProps {
+interface TreegraphProps {
   graphData: IGraphData;
   fgRef: React.MutableRefObject<ForceGraphMethods<any, LinkObject<any, IEdge>>>;
   tarjanCallback: (gData: IGraphData) => void;
   fileData: string;
 }
 
-const Graph = ({ graphData, fgRef, tarjanCallback, fileData }: GraphProps) => {
-  const [cooldownTime, setCooldownTime] = useState(1000);
+const Treegraph = ({
+  graphData,
+  fgRef,
+  tarjanCallback,
+  fileData,
+}: TreegraphProps) => {
+  const [tmpGraph, setTmpGraph] = useState<IGraphData>({
+    nodes: [],
+    links: [],
+  });
 
   useEffect(() => {
     if (graphData.links.length === 0) {
       (async () => {
-        const gData = await genGraphFromJSON(fileData, GraphType.Regular);
+        const gData = await genGraphFromJSON(fileData, GraphType.Tree);
+        createTmpGraph();
         tarjanCallback(gData);
-        // runTarjan(gData);
-        // setGraphData(gData);
-        await delay(cooldownTime);
-        setCooldownTime(0);
+        await delay(0);
       })();
-    } else {
-      const LINK_LENGTH_CONSTANT = 50;
-      const fg = fgRef.current!;
-      fg.d3Force('charge', d3Force.forceManyBody().strength(-600));
-      fg.d3Force('link')!.distance(() => LINK_LENGTH_CONSTANT);
     }
   }, [graphData]);
+
+  const createTmpGraph = () => {
+    const tmp = JSON.parse(fileData);
+    const vis: boolean[] = [];
+    setupTree(tmp, vis);
+    removeCycle(tmp[0], tmp, vis);
+    for (let i = 0; i < Object.keys(tmp).length; i++) {
+      tmp[i].children = tmp[i].tmpChildren;
+    }
+
+    setTmpGraph(genGraphFromObject(tmp, GraphType.Tree));
+  };
 
   return (
     <div className='rounded-lg p-1 bg-twblack-secondary'>
       <ForceGraph2D
         ref={fgRef}
         graphData={graphData}
-        // cooldownTicks={100}
-        cooldownTime={cooldownTime}
+        cooldownTime={0}
         height={screen.height * 0.55}
         width={screen.width * 0.5}
         maxZoom={5}
@@ -55,10 +72,6 @@ const Graph = ({ graphData, fgRef, tarjanCallback, fileData }: GraphProps) => {
         nodeRelSize={10}
         nodeCanvasObjectMode={() => 'after'}
         nodeCanvasObject={(node, ctx, globalScale) => {
-          // ctx.beginPath();
-          // ctx.arc(node.x, node.y, 10 * 1.4, 0, 2 * Math.PI, false);
-          // ctx.fillStyle = 'red';
-          // ctx.fill();
           const label = node.name;
           const fontSize = 10 / globalScale;
           ctx.font = `${fontSize}px Sans-Serif`;
@@ -72,10 +85,12 @@ const Graph = ({ graphData, fgRef, tarjanCallback, fileData }: GraphProps) => {
         linkDirectionalArrowRelPos={1}
         linkCurvature={(link) => {
           let cnt = 0;
-          const tmp = graphData.links;
+          let tmp = graphData.links;
+
           // self edge
           if (link.source === link.target) return 0.8;
 
+          //   2-node cycle
           for (let i = 0; i < tmp.length; i++) {
             if (tmp[i].source === link.source && tmp[i].target === link.target)
               cnt++;
@@ -83,13 +98,25 @@ const Graph = ({ graphData, fgRef, tarjanCallback, fileData }: GraphProps) => {
               cnt++;
           }
 
-          return cnt === 2 ? 0.1 : 0;
+          let cnt2 = 0;
+          tmp = tmpGraph.links;
+
+          for (let i = 0; i < tmp.length; i++) {
+            if (
+              tmp[i].source === link.source.id &&
+              tmp[i].target === link.target.id
+            ) {
+              cnt2++;
+            }
+          }
+
+          return cnt === 2 ? 0.1 : cnt2 === 0 ? 0.2 : 0;
         }}
-        // dagMode='lr'
+        // dagMode='td'
         // dagLevelDistance={100}
       />
     </div>
   );
 };
 
-export default Graph;
+export default Treegraph;

@@ -16,11 +16,11 @@ import {
 } from '../utils';
 import Button from './Button';
 import { Tabs } from '../App';
-import Graph from './Graph';
-import Bigraph from './Bigraph';
+import Graph from './graphs/Graph';
+import Bigraph from './graphs/Bigraph';
 import { highlightCodeLines } from './Pseudocode';
 import { arrow, graph } from '../assets';
-import Treegraph from './Treegraph';
+import Treegraph from './graphs/Treegraph';
 
 enum RunStatus {
   Incomplete,
@@ -678,7 +678,7 @@ const GraphContainer = ({
                     filename = 'hamiltonian2';
                   }
 
-                  const res = await fetch(`./src/example/${filename}.json`);
+                  const res = await fetch(`./src/examples/${filename}.json`);
                   const data = await res.text();
                   setFileData(data);
                 }}>

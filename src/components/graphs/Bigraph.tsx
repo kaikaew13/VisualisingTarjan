@@ -4,8 +4,8 @@ import ForceGraph2D, {
   LinkObject,
 } from 'react-force-graph-2d';
 
-import { GraphType, IEdge, IGraphData } from './GraphContainer';
-import { delay, genGraphFromJSON } from '../utils';
+import { GraphType, IEdge, IGraphData } from '../GraphContainer';
+import { delay, genGraphFromJSON } from '../../utils';
 
 interface BigraphProps {
   graphData: IGraphData;
