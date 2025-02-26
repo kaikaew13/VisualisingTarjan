@@ -60,3 +60,7 @@ Ensure you have the following installed:
 - **Graph and algorithm processing**: TypeScript
 - **Visualisation**: [react-force-graph](https://github.com/vasturiano/react-force-graph) library
 - **Frontend**: React and TailwindCSS
+
+## License
+
+This project is licensed under the **MIT License** - see the [LICENSE](https://github.com/kaikaew13/VisualisingTarjan/blob/main/LICENSE) file for details.
