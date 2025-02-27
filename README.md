@@ -65,7 +65,7 @@ The application will be available at: [http://localhost:5173/VisualisingTarjan/]
 
 ## User Manual
 
-Please refer to **User Manual** for detailed usage instruction of the application.
+Please refer to **[User Manual](https://github.com/kaikaew13/VisualisingTarjan/blob/main/MANUAL.md)** for detailed usage instruction of the application.
 
 ## License
 
