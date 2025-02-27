@@ -32,7 +32,7 @@ Ensure you have the following installed:
    ```
 ## Development
 
-**Run the visualisation server**
+**Run the visualisation server:**
   ```base
   npm run dev
   ```
