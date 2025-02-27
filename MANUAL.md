@@ -1,5 +1,13 @@
 # Tarjan Visualiser User Manual
 
+- [Introduction](#introduction)
+- [Getting Started](#getting-started)
+    - [Accessing the Application](#accessing-the-application)
+    - [System Requirements](#system-requirements)
+    - [Installation](#installation)
+    - [Development](#development)
+- [UI Overview](#ui-overview)
+
 ## Introduction
 
 This web application provides a visualisation of **Tarjan's Algorithm** and its application in **Constraint Programming**. It is designed for:
