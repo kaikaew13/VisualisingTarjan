@@ -1,5 +1,17 @@
 # Tarjan Visualiser: Visualising Applications of Tarjan's Algorithm in Constraint Programming
 
+- [Overview](#overview)
+- [Try It Online](#try-it-online)
+- [Local Installation](#local-installation)
+   - [Prerequisites](#prerequisites)
+   - [Installation](#installation)
+- [Development](#development)
+- [Code Structure](#code-structure)
+- [Tech Stack](#tech-stack)
+- [User Manual](#user-manual)
+- [License](#license)
+
+## Overview
 This project implements and visualises applications of **Tarjan's Algorithm** in **Constraint Programming**. It supports:
 - **Identifying Strongly Connected Components (SCCs)** in directed graphs.
 - **Solving the All-Different Constraint** using SCC decomposition.
@@ -13,7 +25,7 @@ You can try the hosted version of this application without cloning it locally:
 
 [Live Demo on GitHub Pages](https://kaikaew13.github.io/VisualisingTarjan/)
 
-## Installation
+## Local Installation
 
 ### Prerequisites
 
