@@ -37,6 +37,8 @@ Ensure you have the following installed:
   npm run dev
   ```
 
+The application will be available at: [http://localhost:5173/VisualisingTarjan/](http://localhost:5173/VisualisingTarjan/)
+
 ## Code Structure
 
 ```plaintext
@@ -60,6 +62,10 @@ Ensure you have the following installed:
 - **Graph and algorithm processing**: TypeScript
 - **Visualisation**: [react-force-graph](https://github.com/vasturiano/react-force-graph) library
 - **Frontend**: React and TailwindCSS
+
+## User Manual
+
+Please refer to **User Manual** for detailed usage instruction of the application.
 
 ## License
 
