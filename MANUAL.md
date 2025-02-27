@@ -7,6 +7,23 @@
     - [Installation](#installation)
     - [Development](#development)
 - [UI Overview](#ui-overview)
+    - [Main Interfaces](#main-interfaces)
+    - [Graph Visualisation Area](#graph-visualisation-area)
+    - [Navigation Menu](#navigation-menu)
+    - [Animation Control Panel](#animation-control-panel)
+    - [Algorithm Pseudocode](#algorithm-pseudocode)
+    - [Results Area](#results-area)
+- [Features and Functionality](#features-and-functionality)
+    - [Uploading a Graph](#uploading-a-graph)
+    - [Finding Strongly Connected Components](#finding-strongly-connected-components)
+    - [Solving the All-Different Constraint](#solving-the-all-different-constraint)
+    - [Detecting Hamiltonian Circuit Constraints](#detecting-hamiltonian-circuit-constraints)
+    - [Displaying Results](#displaying-results)
+- [Troubleshooting](#troubleshooting)
+    - [Graph not loading](#graph-not-loading)
+    - [How to interpret SCC results](#how-to-interpret-scc-results)
+    - [Large graph support](#large-graph-support)
+- [Support and Contact](#support-and-contact)
 
 ## Introduction
 
@@ -55,8 +72,8 @@ The application will be available at: [http://localhost:5173/VisualisingTarjan/]
 
 ## UI Overview
 
-### Main Interface
-The main interface consists of the following components:
+### Main Interfaces
+The main interfaces consists of the following components:
 1. **Graph visualisation area** - Displays the graph and computed SCCs.
 2. **Navigation menu** - Constains algorithm options between basic, All-Different and Hamiltonian Cirucuit constraint as well as import graph button and link to GitHub repository.
 3. **Animation control panel** - Contains play, pause, next, previous, clear buttons as well as animation speed slider.
@@ -134,7 +151,7 @@ The main interface consists of the following components:
     ```
 - The file **must strictly** follow this JSON structure for the application to correctly parse the input.
 
-### Finding Strongly Connected Components (SCCs)
+### Finding Strongly Connected Components
 - Computes SCCs from a given directed graph.
 - Highlights SCCs in different colors.
 
