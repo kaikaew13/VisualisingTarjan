@@ -75,6 +75,9 @@ interface GraphContainerProps {
   setFileData: Dispatch<SetStateAction<string>>;
   setResSCCs: React.Dispatch<React.SetStateAction<string[][]>>;
   setResHCC: React.Dispatch<React.SetStateAction<IEdge[][]>>;
+  setResAllDiff: React.Dispatch<
+    React.SetStateAction<{ [key: string]: string[] }>
+  >;
   setShowResult: Dispatch<SetStateAction<boolean>>;
 }
 
@@ -85,6 +88,7 @@ const GraphContainer = ({
   setFileData,
   setResSCCs,
   setResHCC,
+  setResAllDiff,
   setShowResult,
 }: GraphContainerProps) => {
   const fgRef = useRef<ForceGraphMethods<any, LinkObject<any, IEdge>>>();
@@ -515,8 +519,17 @@ const GraphContainer = ({
       maxMatchingEdges.push(edgeDict[res.pairU[i]][i]);
     }
 
+    const resAllDiff: { [key: string]: string[] } = {};
+
+    U.forEach((each) => {
+      resAllDiff[newGData.nodes[each].name!] = [];
+    });
+
     maxMatchingEdges.forEach((each) => {
       if (each) {
+        resAllDiff[newGData.nodes[each.target].name!].push(
+          newGData.nodes[each.source].name!
+        );
         const tmp = newGData.links.find((each_) => each_.name === each.name);
         if (tmp) tmp.color = TW_PINK;
       }
@@ -525,6 +538,21 @@ const GraphContainer = ({
     setGraphDataMaxMatching(newGData);
     const SCCs = runTarjan(newGData, newAdjList);
     const edgesToRemove: IEdge[] = [];
+
+    SCCs.forEach((scc) => {
+      if (scc.length > 1) {
+        for (let i = 0; i < scc.length; i += 2) {
+          resAllDiff[newGData.nodes[scc[i]].name!] = [];
+          for (let j = 1; j < scc.length; j += 2) {
+            resAllDiff[newGData.nodes[scc[i]].name!].push(
+              newGData.nodes[scc[j]].name!
+            );
+          }
+        }
+      }
+    });
+
+    setResAllDiff(resAllDiff);
 
     newGData.links.forEach((each) => {
       const targetId = each.target;

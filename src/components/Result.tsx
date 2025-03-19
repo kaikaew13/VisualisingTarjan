@@ -5,10 +5,16 @@ import { IEdge } from './GraphContainer';
 interface ResultProps {
   resSCCs: string[][];
   resHCC?: IEdge[][];
+  resAllDiff?: { [key: string]: string[] };
   showResult: boolean;
 }
 
-function Result({ resSCCs, resHCC = [], showResult }: ResultProps) {
+function Result({
+  resSCCs,
+  resHCC = [],
+  resAllDiff = undefined,
+  showResult,
+}: ResultProps) {
   return (
     <div className='h-full w-full flex flex-col'>
       <span className='flex flex-row m-0 p-0'>
@@ -25,9 +31,7 @@ function Result({ resSCCs, resHCC = [], showResult }: ResultProps) {
         <div className='w-full bg-twblack-secondary h-full rounded-lg flex flex-col p-3 overflow-y-auto'>
           {resHCC.length > 0 &&
             resHCC.map((val, i) => (
-              <div
-                key={i}
-                className={`bg-twblack-secondary p-3 rounded-lg mb-3`}>
+              <div key={i} className={`p-3 mb-3`}>
                 <div className='text-twwhite font-medium text-sm font-poppins underline'>
                   {`Case ${i + 1}: ${HCCCaseMap[i]}`}
                 </div>
@@ -40,6 +44,20 @@ function Result({ resSCCs, resHCC = [], showResult }: ResultProps) {
                 ))}
               </div>
             ))}
+          {resAllDiff && (
+            <div className='p-3 mb-3'>
+              <div className='text-twwhite font-medium text-sm font-poppins underline mb-3'>
+                All-Different Mapping
+              </div>
+              {Object.keys(resAllDiff).map((eachU, i) => (
+                <div
+                  key={i}
+                  className='text-twwhite font-normal text-sm font-poppins'>{`${eachU} -> ${resAllDiff[
+                  eachU
+                ].map((eachV) => ` ${eachV}`)}`}</div>
+              ))}
+            </div>
+          )}
           {resSCCs.map((val, i) => (
             <div
               key={i}

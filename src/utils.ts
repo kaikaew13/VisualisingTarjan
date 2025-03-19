@@ -350,6 +350,7 @@ export const pruneEdges = (
     const tmp = adjList[v];
     for (let j = 0; j < tmp.length; j++) {
       const w = tmp[j];
+      console.log(gData.nodes[w].subtreesMap);
 
       // case 1
       if (w === 0 && gData.nodes[w].subtreesMap[v] !== 0) {

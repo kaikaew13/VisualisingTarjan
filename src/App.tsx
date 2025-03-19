@@ -20,6 +20,7 @@ function App() {
   const [fileData, setFileData] = useState('');
   const [resSCCs, setResSCCs] = useState([]);
   const [resHCC, setResHCC] = useState<IEdge[][]>([]);
+  const [resAllDiff, setResAllDiff] = useState<{ [key: string]: string[] }>({});
   const [showResult, setShowResult] = useState(false);
 
   const addSnackbar = useSnackbar();
@@ -130,10 +131,12 @@ function App() {
             setResSCCs as React.Dispatch<React.SetStateAction<string[][]>>
           }
           setResHCC={setResHCC}
+          setResAllDiff={setResAllDiff}
           setShowResult={setShowResult}
         />
         <Result
           resSCCs={resSCCs}
+          resAllDiff={tab === Tabs.AllDifferent ? resAllDiff : undefined}
           resHCC={tab === Tabs.Hamiltonian ? resHCC : undefined}
           showResult={showResult}
         />
