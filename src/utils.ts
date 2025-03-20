@@ -350,7 +350,6 @@ export const pruneEdges = (
     const tmp = adjList[v];
     for (let j = 0; j < tmp.length; j++) {
       const w = tmp[j];
-      console.log(gData.nodes[w].subtreesMap);
 
       // case 1
       if (w === 0 && gData.nodes[w].subtreesMap[v] !== 0) {
@@ -371,15 +370,30 @@ export const pruneEdges = (
         });
       }
 
+      console.log(gData.nodes[v]);
+
       // case 3
       let vis = Array(adjList.length).fill(false);
       let ancestor = lowestCommonAncestor(0, adjList, vis, v, w);
+      if (gData.nodes[v].subtreesMap[w] !== undefined) {
+        ancestor = v;
+      }
+
+      let firstChild = adjList[v][0];
+      for (let i = 0; i < adjList[v].length; i++) {
+        if (adjList[v][i] > v) {
+          firstChild = adjList[v][i];
+          break;
+        }
+      }
+
       if (
+        gData.nodes[v].subtreesMap[w] !== undefined &&
         v !== 0 &&
         w !== 0 &&
         ancestor !== undefined &&
         ancestor !== w &&
-        w === adjList[v][0] &&
+        w === firstChild &&
         !hasBackEdge(w, adjList, gData)
       ) {
         if (gData.nodes[v].parent !== gData.nodes[w].parent) {

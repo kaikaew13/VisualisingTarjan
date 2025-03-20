@@ -1,0 +1,34 @@
+{
+  "0": {
+    "name": "node 0",
+    "children": ["1", "3", "4"]
+  },
+  "1": {
+    "name": "node 1",
+    "children": ["2", "3"]
+  },
+  "2": {
+    "name": "node 2",
+    "children": ["7"]
+  },
+  "3": {
+    "name": "node 3",
+    "children": ["0"]
+  },
+  "4": {
+    "name": "node 4",
+    "children": ["6"]
+  },
+  "5": {
+    "name": "node 5",
+    "children": ["1"]
+  },
+  "6": {
+    "name": "node 6",
+    "children": ["5"]
+  },
+  "7": {
+    "name": "node 7",
+    "children": ["5", "6"]
+  }
+}

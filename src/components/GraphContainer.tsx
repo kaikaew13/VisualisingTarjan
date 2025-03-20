@@ -660,6 +660,7 @@ const GraphContainer = ({
       setTransitionFramesIdx(0);
       setTransitionFrames([]);
       setHighlightLines('');
+      setIsAnimationDone(false);
       setIsRunning(RunStatus.Incomplete);
       isRunningRef.current = RunStatus.Incomplete;
     }
@@ -677,6 +678,7 @@ const GraphContainer = ({
     setTransitionFramesIdx(0);
     setTransitionFrames([]);
     setHighlightLines('');
+    setIsAnimationDone(false);
     setIsRunning(RunStatus.Incomplete);
     isRunningRef.current = RunStatus.Incomplete;
   }, [tab]);
