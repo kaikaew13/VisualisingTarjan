@@ -4,7 +4,7 @@ import ForceGraph2D, {
 } from 'react-force-graph-2d';
 
 import { GraphType, IEdge, IGraphData } from '../GraphContainer';
-import { useEffect, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import {
   delay,
   genGraphFromJSON,
@@ -12,12 +12,14 @@ import {
   removeCycle,
   setupTree,
 } from '../../utils';
+import useSnackbar from '../../hooks/useSnackbar';
 
 interface TreegraphProps {
   graphData: IGraphData;
   fgRef: React.MutableRefObject<ForceGraphMethods<any, LinkObject<any, IEdge>>>;
   tarjanCallback: (gData: IGraphData) => void;
   fileData: string;
+  setFileData: Dispatch<SetStateAction<string>>;
 }
 
 const Treegraph = ({
@@ -25,19 +27,31 @@ const Treegraph = ({
   fgRef,
   tarjanCallback,
   fileData,
+  setFileData,
 }: TreegraphProps) => {
   const [tmpGraph, setTmpGraph] = useState<IGraphData>({
     nodes: [],
     links: [],
   });
 
+  const addSnackbar = useSnackbar();
+
   useEffect(() => {
     if (graphData.links.length === 0) {
       (async () => {
-        const gData = await genGraphFromJSON(fileData, GraphType.Tree);
-        createTmpGraph();
-        tarjanCallback(gData);
-        await delay(0);
+        try {
+          const gData = await genGraphFromJSON(fileData, GraphType.Tree);
+          createTmpGraph();
+          tarjanCallback(gData);
+          await delay(0);
+        } catch (error) {
+          addSnackbar({
+            key: 'error',
+            text: 'Data imported is not in correct format',
+            variant: 'error',
+          });
+          setFileData('');
+        }
       })();
     }
   }, [graphData]);

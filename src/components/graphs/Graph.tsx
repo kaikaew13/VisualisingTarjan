@@ -5,28 +5,46 @@ import ForceGraph2D, {
 import * as d3Force from 'd3-force';
 
 import { GraphType, IEdge, IGraphData } from '../GraphContainer';
-import { useEffect, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { delay, genGraphFromJSON } from '../../utils';
+import useSnackbar from '../../hooks/useSnackbar';
 
 interface GraphProps {
   graphData: IGraphData;
   fgRef: React.MutableRefObject<ForceGraphMethods<any, LinkObject<any, IEdge>>>;
   tarjanCallback: (gData: IGraphData) => void;
   fileData: string;
+  setFileData: Dispatch<SetStateAction<string>>;
 }
 
-const Graph = ({ graphData, fgRef, tarjanCallback, fileData }: GraphProps) => {
+const Graph = ({
+  graphData,
+  fgRef,
+  tarjanCallback,
+  fileData,
+  setFileData,
+}: GraphProps) => {
   const [cooldownTime, setCooldownTime] = useState(1000);
+  const addSnackbar = useSnackbar();
 
   useEffect(() => {
     if (graphData.links.length === 0) {
       (async () => {
-        const gData = await genGraphFromJSON(fileData, GraphType.Regular);
-        tarjanCallback(gData);
-        // runTarjan(gData);
-        // setGraphData(gData);
-        await delay(cooldownTime);
-        setCooldownTime(0);
+        try {
+          const gData = await genGraphFromJSON(fileData, GraphType.Regular);
+          tarjanCallback(gData);
+          // runTarjan(gData);
+          // setGraphData(gData);
+          await delay(cooldownTime);
+          setCooldownTime(0);
+        } catch (error) {
+          addSnackbar({
+            key: 'error',
+            text: 'Data imported is not in correct format',
+            variant: 'error',
+          });
+          setFileData('');
+        }
       })();
     } else {
       const LINK_LENGTH_CONSTANT = 50;

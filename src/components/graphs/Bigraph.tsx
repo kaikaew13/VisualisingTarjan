@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { Dispatch, SetStateAction, useEffect } from 'react';
 import ForceGraph2D, {
   ForceGraphMethods,
   LinkObject,
@@ -6,6 +6,7 @@ import ForceGraph2D, {
 
 import { GraphType, IEdge, IGraphData } from '../GraphContainer';
 import { delay, genGraphFromJSON } from '../../utils';
+import useSnackbar from '../../hooks/useSnackbar';
 
 interface BigraphProps {
   graphData: IGraphData;
@@ -13,6 +14,7 @@ interface BigraphProps {
   tarjanCallback: (gData: IGraphData) => void;
   isDirected: boolean;
   fileData: string;
+  setFileData: Dispatch<SetStateAction<string>>;
 }
 
 const Bigraph = ({
@@ -21,16 +23,28 @@ const Bigraph = ({
   tarjanCallback,
   isDirected,
   fileData,
+  setFileData,
 }: BigraphProps) => {
+  const addSnackbar = useSnackbar();
+
   useEffect(() => {
     if (graphData.links.length === 0) {
       // setGraphData(genRandomTree(10) as IGraphData);
       // setGraphData(dummyGraph);
 
       (async () => {
-        const gData = await genGraphFromJSON(fileData, GraphType.Bipartite);
-        tarjanCallback(gData);
-        await delay(0);
+        try {
+          const gData = await genGraphFromJSON(fileData, GraphType.Bipartite);
+          tarjanCallback(gData);
+          await delay(0);
+        } catch (error) {
+          addSnackbar({
+            key: 'error',
+            text: 'Data imported is not in correct format',
+            variant: 'error',
+          });
+          setFileData('');
+        }
       })();
     }
   }, [graphData]);

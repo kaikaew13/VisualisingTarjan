@@ -733,6 +733,7 @@ const GraphContainer = ({
               setGraphData(gData);
             }}
             fileData={fileData}
+            setFileData={setFileData}
           />
         ) : tab === Tabs.AllDifferent ? (
           <Bigraph
@@ -750,6 +751,7 @@ const GraphContainer = ({
             }}
             isDirected={isGraphDirected}
             fileData={fileData}
+            setFileData={setFileData}
           />
         ) : (
           <Treegraph
@@ -765,6 +767,7 @@ const GraphContainer = ({
               setGraphData(gData);
             }}
             fileData={fileData}
+            setFileData={setFileData}
           />
         )}
       </div>
