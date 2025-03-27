@@ -327,6 +327,8 @@ const GraphContainer = ({
       }
     }
 
+    console.log(node);
+
     return SCCs;
   };
 
@@ -358,7 +360,7 @@ const GraphContainer = ({
     isRunningRef.current = RunStatus.Incomplete;
   };
 
-  const playNextTransition = async (result: ITransitionFrame[], i: number) => {
+  const playNextTransition = (result: ITransitionFrame[], i: number) => {
     if (result[i].x) {
       if ('id' in result[i].x!) {
         changeNodeColor(result[i].x as INode, result[i].toColor);
@@ -372,7 +374,7 @@ const GraphContainer = ({
     setTransitionFramesIdx(i + 1);
   };
 
-  const playPrevTransition = async (result: ITransitionFrame[], i: number) => {
+  const playPrevTransition = (result: ITransitionFrame[], i: number) => {
     i--;
 
     if (result[i].x) {

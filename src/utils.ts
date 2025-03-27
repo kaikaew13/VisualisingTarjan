@@ -370,8 +370,6 @@ export const pruneEdges = (
         });
       }
 
-      console.log(gData.nodes[v]);
-
       // case 3
       let vis = Array(adjList.length).fill(false);
       let ancestor = lowestCommonAncestor(0, adjList, vis, v, w);
