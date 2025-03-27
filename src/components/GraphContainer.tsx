@@ -11,8 +11,6 @@ import {
   getFirstRightNodeName,
   getGraphObjFromIGraphData,
   pruneEdges,
-  HCC_CASE,
-  genGraphFromJSON,
 } from '../utils';
 import Button from './Button';
 import { Tabs } from '../App';

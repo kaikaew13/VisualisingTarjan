@@ -6,7 +6,6 @@ import Pseudocode from './components/Pseudocode';
 import { gh } from './assets';
 import Result from './components/Result';
 import useSnackbar from './hooks/useSnackbar';
-import { HCC_CASE } from './utils';
 
 export enum Tabs {
   SCC,
